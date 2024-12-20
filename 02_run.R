@@ -62,6 +62,11 @@ stopifnot(sip[1] != 0)
 NN <- as.integer(nrow(case_matrix))
 
 tau = as.integer(3)
+## NOTE: interesting, seems to work better for smaller tau?
+## that probably is not the expected behavior
+## so, it converges for tau = 3, but not for tau = 7
+
+
 SWrow = as.integer(NN-tau+1)
 sliding_windows <- matrix(data = NA, nrow = SWrow, ncol = tau)
 window_i = 1
