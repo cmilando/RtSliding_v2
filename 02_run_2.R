@@ -61,8 +61,7 @@ stopifnot(sip[1] != 0)
 
 NN <- as.integer(nrow(case_matrix))
 
-tau = as.integer(30)
-
+tau = as.integer(7)
 ## NOTE: interesting, seems to work better for smaller tau?
 ## that probably is not the expected behavior
 ## so, it converges for tau = 3, but not for tau = 7
@@ -83,8 +82,6 @@ for(i in 1:nrow(sliding_windows)) {
     sliding_windows[i,j] <- as.integer(sliding_windows[i, j])
   }
 }
-sliding_windows
-dim(sliding_windows)
 
 sliding_windows
 
@@ -100,14 +97,26 @@ stan_data <- list(
   P = transfer_matrix,    # transfer matrix
   S = length(sip),        # serial interval length
   W = sip,                # serial interval vector
-  init_cases = as.integer(c(100, 100))     # initial cases
+  init_cases = case_matrix[1, ]     # initial cases
 )
 
+
+initf1 <- function() {
+  #
+  # vector<lower=0.00005>[J] xsigma;  // region-specific st-dev
+  # matrix[NW,J] xbeta;         // time-region specific beta
+  # matrix[NW,J] logR;          // time-region specific R values, in Log space
+  #
+  list(xsigma = rep(0.1, ncol(case_matrix)),
+       xbeta = matrix(0, nrow = SWrow, ncol = ncol(case_matrix)),
+       logR = matrix(0.1, nrow = NN, ncol = ncol(case_matrix)))
+}
 
 library(rstan)
 
 m_hier <- rstan::stan(file = 'sliding.stan',
                       data = stan_data,
+                      init = initf1,
                       verbose = T,
                       iter = 2000,
                       cores = 4,
@@ -117,69 +126,11 @@ out <- rstan::extract(m_hier)
 
 out
 
-library(shinystan)
-shinystan::launch_shinystan(m_hier)
+# library(shinystan)
+# shinystan::launch_shinystan(m_hier)
 
 dim(out$M)
 dim(out$xsigma)
-dim(out$R)
-
-dim(out$xbeta)
-
-#############
-reg1 <- out$xbeta[, , 1]
-reg1_lb <- apply(t(reg1), 1, min)
-reg1_ub <- apply(t(reg1), 1, max)
-reg1_m <- apply(t(reg1), 1, median)
-
-plot(exp(reg1_m))
-lines(exp(reg1_lb))
-lines(exp(reg1_ub))
-lines(R_this[, 1], col = 'blue')
-lines(R_rev[,1], col = 'blue')
-
-#############
-reg1 <- out$xbeta[, , 2]
-reg1_lb <- apply(t(reg1), 1, min)
-reg1_ub <- apply(t(reg1), 1, max)
-reg1_m <- apply(t(reg1), 1, median)
-
-plot(exp(reg1_m))
-lines(exp(reg1_lb))
-lines(exp(reg1_ub))
-lines(R_this[, 2], col = 'red')
-lines(R_rev[,2], col = 'red')
-
-
-#############
-reg1 <- out$logR[, , 1]
-reg1_lb <- apply(t(reg1), 1, min)
-reg1_ub <- apply(t(reg1), 1, max)
-reg1_m <- apply(t(reg1), 1, median)
-
-plot(exp(reg1_m))
-lines(exp(reg1_lb))
-lines(exp(reg1_ub))
-lines(R_this[, 1], col = 'blue')
-lines(R_rev[,1], col = 'blue')
-
-#############
-reg1 <- out$xbeta[, , 2]
-reg1_lb <- apply(t(reg1), 1, min)
-reg1_ub <- apply(t(reg1), 1, max)
-reg1_m <- apply(t(reg1), 1, median)
-
-plot(exp(reg1_m))
-lines(exp(reg1_lb))
-lines(exp(reg1_ub))
-lines(R_this[, 2], col = 'red')
-lines(R_rev[,2], col = 'red')
-
-
-
-
-
-
 
 dim(out$xbeta)
 dim(out$logR)
@@ -190,7 +141,7 @@ xx_m <- exp(apply(xx, 1, quantile, probs = 0.5))
 xx_l <- exp(apply(xx, 1, quantile, probs = 0.025))
 xx_u <- exp(apply(xx, 1, quantile, probs = 0.975))
 xx_l
-plot(xx_m, ylim = c(1, 1.1))
+plot(xx_m)
 lines(x = 1:80, y = xx_l)
 lines(x = 1:80, y = xx_u)
 abline(v= tau)
@@ -206,40 +157,64 @@ lines(x = 1:80, y = xx_l)
 lines(x = 1:80, y = xx_u)
 abline(v= tau)
 
+xx <- t(out$Y_out[, , 2])
+dim(xx)
+xx_m <- apply(xx, 1, quantile, probs = 0.5)
+xx_l <- apply(xx, 1, quantile, probs = 0.025)
+xx_u <- apply(xx, 1, quantile, probs = 0.975)
+
+plot(xx_m)
+lines(x = 1:80, y = xx_l)
+lines(x = 1:80, y = xx_u)
 
 
 
 data_l <- lapply(1:dim(out$M)[3], function(i) {
   data.frame(
-    x      = 1:dim(out$R)[2],
-    #y_real = Y[, i],
-    y      = apply(out$M[, (2:(NN+1)), i], 2, quantile, probs = 0.5),
-    yl     = apply(out$M[, (2:(NN+1)), i], 2, quantile, probs = 0.025),
-    yh     = apply(out$M[, (2:(NN+1)), i], 2, quantile, probs = 0.975),
-    Rt     = apply(out$R[, , i], 2, quantile, probs = 0.5),
+    x      = 1:dim(out$M)[2],
+    y_real = Y[, i],
+    y      = apply(out$M[, , i], 2, mean),
+    yl     = apply(out$M[, , i], 2, quantile, probs = 0.025),
+    yh     = apply(out$M[, , i], 2, quantile, probs = 0.975),
+    Rt     = apply(out$R[, , i], 2, mean),
     Rtl    = apply(out$R[, , i], 2, quantile, probs = 0.025),
     Rth    = apply(out$R[, , i], 2, quantile, probs = 0.975),
     region = site_names[i] # must be a string
   )
 })
 
-data_all <- do.call(rbind, data_l)
 
+
+
+
+data_all <- do.call(rbind, data_l)
+head(data_all)
 dim(data_all)
 
+# Summarise data
+data_all_summarise <- aggregate(
+  cbind(y, y_real, yl, yh, Rt, Rtl, Rth) ~ x + region,
+  data = data_all,
+  FUN = mean
+)
 
+head(data_all_summarise)
+head(data_all)
 
+data_all_summarise <- data_all
 
 # Generate a color palette
-regions <- unique(data_all$region)
+regions <- unique(data_all_summarise$region)
 # Define a set of distinct colors
-colors <- c("red", "blue")
+colors <- c("red", "blue", "green", "purple", "orange", "brown",
+            "pink", "yellow", "cyan", "magenta")
+colors <- colors[1:length(regions)]
 names(colors) <- regions
 
 # Plot expected cases
 plot(
-  x = as.integer(data_all$x),
-  y = as.numeric(data_all$y),
+  x = as.integer(data_all_summarise$x),
+  y = as.numeric(data_all_summarise$y),
   type = "n",
   xlab = "Days",
   ylab = "Cases",
@@ -247,14 +222,14 @@ plot(
 )
 
 for (region_i in regions) {
-  region_data <- subset(data_all, region == region_i)
-  #points(x = region_data$x, region_data$y_real, col = colors[region_i])
+  region_data <- subset(data_all_summarise, region == region_i)
+  points(x = region_data$x, region_data$y_real, col = colors[region_i])
   polygon(
     c(region_data$x, rev(region_data$x)),
     c(region_data$yl, rev(region_data$yh)),
     col = adjustcolor(colors[region_i], alpha.f = 0.3), border = NA
   )
-  #lines(region_data$x, region_data$y, col = colors[region_i], lwd = 0.5)
+  lines(region_data$x, region_data$y, col = colors[region_i], lwd = 0.5)
 }
 
 
@@ -272,14 +247,14 @@ legend("topright",
 
 # Plot R(t)
 plot(
-  data_all$x, data_all$Rt,
+  data_all_summarise$x, data_all_summarise$Rt,
   xlab = "Days", ylab = "Reproduction Number",
   type = "n",
   main = "R(t)",
   ylim = c(0, 5)
 )
 for (region_i in regions) {
-  region_data <- subset(data_all, region == region_i)
+  region_data <- subset(data_all_summarise, region == region_i)
   polygon(
     c(region_data$x, rev(region_data$x)),
     c(region_data$Rtl, rev(region_data$Rth)),

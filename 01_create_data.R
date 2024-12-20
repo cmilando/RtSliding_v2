@@ -59,10 +59,12 @@ R_this <- matrix(NA, nrow = tmax, ncol = 2)
 # P <- matrix(c(0.8, 0.4,
 #               0.2, 0.6), 2)
 
+
 # no transfer
 
 P <- matrix(c(1, 0,
               0, 1), 2)
+
 
 P
 #' -----------------------------------------
