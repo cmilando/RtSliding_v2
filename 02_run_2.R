@@ -126,8 +126,8 @@ out <- rstan::extract(m_hier)
 
 out
 
-library(shinystan)
-shinystan::launch_shinystan(m_hier)
+# library(shinystan)
+# shinystan::launch_shinystan(m_hier)
 
 dim(out$M)
 dim(out$xsigma)
@@ -141,7 +141,7 @@ xx_m <- exp(apply(xx, 1, quantile, probs = 0.5))
 xx_l <- exp(apply(xx, 1, quantile, probs = 0.025))
 xx_u <- exp(apply(xx, 1, quantile, probs = 0.975))
 xx_l
-plot(xx_m, ylim = c(1, 1.1))
+plot(xx_m)
 lines(x = 1:80, y = xx_l)
 lines(x = 1:80, y = xx_u)
 abline(v= tau)
@@ -157,6 +157,15 @@ lines(x = 1:80, y = xx_l)
 lines(x = 1:80, y = xx_u)
 abline(v= tau)
 
+xx <- t(out$Y_out[, , 2])
+dim(xx)
+xx_m <- apply(xx, 1, quantile, probs = 0.5)
+xx_l <- apply(xx, 1, quantile, probs = 0.025)
+xx_u <- apply(xx, 1, quantile, probs = 0.975)
+
+plot(xx_m)
+lines(x = 1:80, y = xx_l)
+lines(x = 1:80, y = xx_u)
 
 
 
@@ -173,6 +182,10 @@ data_l <- lapply(1:dim(out$M)[3], function(i) {
     region = site_names[i] # must be a string
   )
 })
+
+
+
+
 
 data_all <- do.call(rbind, data_l)
 head(data_all)

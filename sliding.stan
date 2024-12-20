@@ -103,3 +103,13 @@ model {
 
 }
 
+generated quantities {
+    matrix[N, J] Y_out;
+    for(j in 1:J) {
+      for(n in 1:N) {
+        Y_out[n, j] = poisson_rng(M[n, j]);
+      }
+  }
+
+}
+
