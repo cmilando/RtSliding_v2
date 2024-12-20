@@ -14,7 +14,7 @@ w <- sapply(1:14, function(x){
 # this should have a leading 0 right ?
 # maybe implemented elsewhere
 w <- c(w/sum(w))
-w0 = 0
+
 plot(w)
 #' -----------------------------------------
 # Function 1: Quadratic
@@ -56,13 +56,13 @@ R_this <- matrix(NA, nrow = tmax, ncol = 2)
 
 # some transfer
 
-P <- matrix(c(0.8, 0.4,
-              0.2, 0.6), 2)
+# P <- matrix(c(0.8, 0.4,
+#               0.2, 0.6), 2)
 
 # no transfer
 
-# P <- matrix(c(0.999, 0.001,
-#               0.001, 0.999), 2)
+P <- matrix(c(1, 0,
+              0, 1), 2)
 
 P
 #' -----------------------------------------
@@ -73,6 +73,8 @@ J <- 2
 M[1,] <- rep(100, J)
 N[1,] <- rep(100, J)
 S <- length(w)
+add_noise <- T
+noise_p = 0.25
 set.seed(123)
 
 #' -----------------------------------------
@@ -103,7 +105,13 @@ for(t in 1:tmax) {
   outer_vec = t(P) %*% inner_vec
 
   M[mt, ] = outer_vec
-  N[mt, ] = sapply(outer_vec, function(x) rpois(1, x))
+
+  if(!add_noise) {
+    N[mt, ] = sapply(outer_vec, function(x) rpois(1, x))
+  } else {
+    N[mt, ] = sapply(outer_vec, function(x) rpois(1, runif(1, (1-noise_p)*x,
+                                                          (1+noise_p)*x)))
+  }
 
   ## --------------------------------------------------
   ## reverse calc R
@@ -138,6 +146,10 @@ for(t in 1:tmax) {
   head(R_this)
 }
 
+# Now, reset M and N
+M <- M[2:nrow(M),]
+N <- N[2:nrow(N),]
+
 plot(M[,1], type = 'l', col = 'red')
 lines(N[, 1], col = 'red')
 lines(M[,2], type = 'l', col = 'green')
@@ -155,21 +167,21 @@ R_this[,2]
 ## SAMPLE DATES
 ref_date = as.Date('2020-01-01')
 sample_dates = seq.Date(from = ref_date, to = ref_date + nrow(N) - 1, by = 'day')
-
+sample_dates
 
 ##  SAMPLE MULTI SITE
-sample_multi_site = data.frame(date = sample_dates, N)
+sample_multi_site = data.frame(date = sample_dates, N[1:(nrow(N)),])
 colnames(sample_multi_site)[2:3] <- c('Tatooine', 'Hoth')
 
 
 ## TRANSFER MATRIX
 # make daily
-P_list <- lapply(1:nrow(N), function(x) P)
+P_list <- lapply(1:(nrow(N)), function(x) P)
 transfer_matrix <- do.call(rbind, P_list)
 dim(transfer_matrix)
 colnames(transfer_matrix) <- c('Tatooine', 'Hoth')
 rn = vector("character", nrow(N))
-for(i in seq(2, nrow(N) * 2, by = 2)) {
+for(i in seq(2, (nrow(N)) * 2, by = 2)) {
   rn[i-1] = paste0(sample_dates[i/2], ':Tatooine')
   rn[i]   = paste0(sample_dates[i/2], ':Hoth')
 }
