@@ -1,130 +1,109 @@
 ## code to prepare ALL datasets goes here
 
 
-si_shape <- 2       ## shape parameter for serial interval assuming gamma distribution
-si_rate  <- 0.5     ## rate parameter for serial interval assuming gamma distribution
+#' -----------------------------------------
+## shape parameter for serial interval assuming gamma distribution
+## rate parameter for serial interval assuming gamma distribution
+si_shape <- 2
+si_rate  <- 0.5
 
 w <- sapply(1:14, function(x){
   pgamma(x, si_shape, si_rate) - pgamma(x-1, si_shape, si_rate)
 })
 
-w <- w/sum(w)
-
-Ra <- function(t) {
-  tt = (20*cos(t/500) + (0.8*t - 50)^2 - (0.115 * t)^3)/1000 + 0.8
-  tt_out <- ifelse(tt < 0.3, 0.3, tt)
-  return(tt_out)
+# this should have a leading 0 right ?
+# maybe implemented elsewhere
+w <- c(w/sum(w))
+w0 = 0
+plot(w)
+#' -----------------------------------------
+# Function 1: Quadratic
+Ra <- function(x) {
+  a <- 0.00001   # Adjusted cubic coefficient
+  b <- -0.0018   # Adjusted quadratic coefficient
+  c <- 0.05      # Adjusted linear coefficient
+  d <- 0.2       # Starting value
+  y <- a * x^3 + b * x^2 + c * x + d
+  # Rescale smoothly to the range [0.2, 3]
+  y <- (y - min(y)) / (max(y) - min(y)) * (2 - 0.2) + 0.2
+  return(y)
 }
-Rb <- function(t) {
-  tt = (30*cos(t/500) + (0.6*t - 50)^2 - (0.15 * t)^3)/1000 + 0.7
-  tt_out <- ifelse(tt < 0.3, 0.3, tt)
-  return(tt_out)
-}
 
-Rb <- function(t) (20*cos(t/500) + (0.8*t - 50)^2 - (0.115 * t)^3)/1000 + 0.8
-Ra <- function(t) (30*sin(t/150) + cos(t/20) - (t/50)^2)/8 - 0.006*t + 0.5
+# Function 2: Cubic
+Rb <- function(x) {
+  a <- 0.00001  # Coefficient for cubic term
+  b <- -0.002   # Coefficient for quadratic term
+  c <- 0.1      # Coefficient for linear term
+  d <- 0.3      # Starting point
+  y <- a * x^3 + b * x^2 + c * x + d
+  y <- pmax(pmin(y, 3), 0.2)
+  return(y)
+}
 
 tmax <- 80
 
 Rmatrix = cbind(Ra(1:tmax), Rb(1:tmax))
 head(Rmatrix)
+plot(1:tmax, Ra(1:tmax), type = 'l')
+lines(1:tmax, Rb(1:tmax), type = 'l', col = 'red')
 
-M <- matrix(NA, nrow = tmax, ncol = 2)
-N <- matrix(NA, nrow = tmax, ncol = 2)
+M <- matrix(NA, nrow = tmax + 1, ncol = 2)
+N <- matrix(NA, nrow = tmax + 1, ncol = 2)
 R_rev <- matrix(NA, nrow = tmax, ncol = 2)
 R_this <- matrix(NA, nrow = tmax, ncol = 2)
 
-# initialize
-t = 1
-R_rev[t, ] <- 1e-5
-R_this[t, ] <- 1e-5
-M[t, ] <- 100
-N[t, ] <- 100
-J <- 2
-S <- length(w)
+#' -----------------------------------------
 
-# P <- matrix(c(0.8, 0.2, 0.1,
-#               0.15, 0.6, 0.3,
-#               0.05, 0.2, 0.6), 3)
+# some transfer
 
 P <- matrix(c(0.8, 0.4,
               0.2, 0.6), 2)
 
-# P <- matrix(c(0.99, 0.01,
-#               0.01, 0.99), 2)
+# no transfer
+
+# P <- matrix(c(0.999, 0.001,
+#               0.001, 0.999), 2)
 
 P
+#' -----------------------------------------
+
+# initialize
+t = 1
+J <- 2
+M[1,] <- rep(100, J)
+N[1,] <- rep(100, J)
+S <- length(w)
 set.seed(123)
 
-for(t in 2:tmax) {
+#' -----------------------------------------
+for(t in 1:tmax) {
 
-  # what are the boundaries of tau
-  tau_end = min(S, t - 1)
+  # what are the boundaries of serial_interval
+  w_i = min(S, t)
 
-  ## FIRST YOU CAN CALCULATE THE INNER
-  # dim(Rmatrix[t, ])
-  #inner_vec2 <- as.matrix(rep(Rmatrix[t, ],ta) %*% M[t - 1:tau_end, 1] %*% w[1:tau_end]
+  mt = t+1
 
-  ## need to repeat this
-  #J = 1
-
+  # #
   RR <- diag(Rmatrix[t, ])
   RR
 
   ## MM is m(t - 1), ..., m(1)
   ## where rows are regions
   ## and columns are time
-  if(t == 2) {
-    MM <- as.matrix(M[t - 1:tau_end, ])
+  if(t == 1) {
+    MM <- as.matrix(M[1, ])
   } else {
-    MM <- t(as.matrix(M[t - 1:tau_end, ]))
+    MM <- t(as.matrix(M[mt - 1:w_i, ]))
   }
   MM
-  WW <-  as.matrix(w[1:tau_end])
-
+  WW <-  as.matrix(w[1:w_i])
   inner_vec <- RR %*% MM %*% WW
+  inner_vec
 
-  # Rmatrix[t, ]
-  # RR <- matrix(rep(Rmatrix[t, ],times = tau_end), ncol = tau_end)
-  # RR
-  # RR %*% M[t - 1:tau_end, ]
-  #
-  # inner_vec = vector("numeric", J)
-  # inner_vec[1:J] <- 0
-  # ##
-  # for(jx in 1:J) {
-  #
-  #   ## FOR EACH jx CALCULATE THE SUM
-  #   for(tau in 1:tau_end) {
-  #     inner_vec[jx] = inner_vec[jx] + Rmatrix[t, jx] * M[t - tau, jx] * w[tau]
-  #   }
-  #
-  # }
-  # inner_vec ## just 1 for each region
-  # Rmatrix[t,]## //
-
-  ##x
-  # outer_vec = vector("numeric", J)
-  # outer_vec[1:J] <- 0
-  #
-  # # this gets each m_j
-  # for(j in 1:J) {
-  #
-  #   # now loop over all j' within each j
-  #   for(jx in 1:J) {
-  #
-  #     # ****
-  #     # the difference is whether you invert jx or j in P
-  #     # ****
-  #     outer_vec[j] = outer_vec[j] + P[jx, j] * inner_vec[jx]
-  #
-  #   }
-  #
-  # }
   outer_vec = t(P) %*% inner_vec
 
-  M[t, ] = outer_vec
-  N[t, ] = sapply(outer_vec, function(x) rpois(1, x))
+  M[mt, ] = outer_vec
+  N[mt, ] = sapply(outer_vec, function(x) rpois(1, x))
 
   ## --------------------------------------------------
   ## reverse calc R
@@ -134,7 +113,7 @@ for(t in 2:tmax) {
   c_mat <- t(P) * sum_m_w_mat
   c_mat
 
-  R_rev[t, ] <- solve(t(c_mat) %*% c_mat) %*% t(c_mat) %*% M[t, ]
+  R_rev[t, ] <- solve(t(c_mat) %*% c_mat) %*% t(c_mat) %*% M[mt, ]
 
   R_rev[t, ]
   Rmatrix[t, ]
@@ -143,10 +122,10 @@ for(t in 2:tmax) {
 
   ## --------------------------------------------------
   ## calc this R based on N not MM
-  if(t == 2) {
-    NN <- as.matrix(N[t - 1:tau_end, ])
+  if(t == 1) {
+    NN <- as.matrix(N[1, ])
   } else {
-    NN <- t(as.matrix(N[t - 1:tau_end, ]))
+    NN <- t(as.matrix(N[mt - 1:w_i, ]))
   }
 
   sum_m_w_mat <- matrix(rep(NN %*% WW, times = J), byrow = T, nrow = J)
@@ -155,8 +134,8 @@ for(t in 2:tmax) {
   c_mat <- t(P) * sum_m_w_mat
   c_mat
 
-  R_this[t, ] <- solve(t(c_mat) %*% c_mat) %*% t(c_mat) %*% N[t, ]
-
+  R_this[t, ] <- solve(t(c_mat) %*% c_mat) %*% t(c_mat) %*% N[mt, ]
+  head(R_this)
 }
 
 plot(M[,1], type = 'l', col = 'red')
