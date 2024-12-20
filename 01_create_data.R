@@ -21,8 +21,8 @@ Rb <- function(t) {
   return(tt_out)
 }
 
-Ra <- function(t) (20*cos(t/500) + (0.8*t - 50)^2 - (0.115 * t)^3)/1000 + 0.8
-Rb <- function(t) (30*sin(t/150) + cos(t/20) - (t/50)^2)/8 - 0.006*t + 0.5
+Rb <- function(t) (20*cos(t/500) + (0.8*t - 50)^2 - (0.115 * t)^3)/1000 + 0.8
+Ra <- function(t) (30*sin(t/150) + cos(t/20) - (t/50)^2)/8 - 0.006*t + 0.5
 
 tmax <- 80
 
