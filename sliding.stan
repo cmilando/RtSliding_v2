@@ -18,7 +18,7 @@ parameters {
 }
 
 transformed parameters {
-  matrix[N,J] M;           // expected value of cases
+  matrix[N+1,J] M;           // expected value of cases
   matrix[N,J] R;           // time and region specific R values, expressed normally
   matrix[J, J] RR;         // Diag R matrix
 
@@ -37,10 +37,13 @@ transformed parameters {
   }
 
   // calculate m[t,j] for t >= 1
-  for(n in 2:N) {
+  for(n in 1:N) {
+
+    // M needs its own iterator
+    int mn = n + 1;
 
     // calculate the inner part first
-    int tau_end = min(S, n - 1);
+    int tau_end = min(S, n);
 
     // Create diagonal matrix RR
     RR = diag_matrix(to_vector(R[n, ]));
@@ -51,7 +54,7 @@ transformed parameters {
     // and columns are time
     matrix[J, tau_end] MM;
     for(tt in 1:tau_end) {
-      MM[, tt] = to_vector(M[n - tt, ]);
+      MM[, tt] = to_vector(M[mn - tt, ]);
     }
 
     // Create WW vector
@@ -61,7 +64,7 @@ transformed parameters {
     // Calculate result
     int start_P = J*(n - 1) + 1;
     int end_P   = J*(n - 1) + J;
-    M[n, ] = to_row_vector(P[start_P:end_P, ]' * RR * MM * WW);
+    M[mn, ] = to_row_vector(P[start_P:end_P, ]' * RR * MM * WW);
 
   }
 
@@ -83,7 +86,7 @@ model {
       // sample logR
       for(ww in 1:SWrow) {
         // beginning of the sliding window
-        int start_W = to_int(SW[ww, 1]);
+        int start_W = SW[ww, 1];
         // end of the sliding window
         int end_W   = SW[ww, SWcol];
         // each block of R(t)
@@ -97,7 +100,8 @@ model {
   // ------ EQUATION (11c) -------
   for(j in 1:J) {
       for(n in 1:N) {
-        Y[n, j] ~ poisson(M[n, j]);
+        int mn = n+1;
+        Y[n, j] ~ poisson(M[mn, j]);
       }
   }
 
