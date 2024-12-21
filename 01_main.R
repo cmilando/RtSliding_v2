@@ -259,7 +259,7 @@ points(NOBS, col = 'black')
 
 # Plot 2: R(t)
 plot(x = 1:maxt, y = RT_calc, col = 'red', lwd = 1, type = 'l',
-     ylab = 'R(t) Values', xlab = 'Time',
+     ylab = 'R(t) Values', xlab = 'Time', ylim = c(0, 2),
      main = 'R(t) with CI')
 lines(x = tau:maxt, y = Rlist_med, type = 'l',
      col = 'green')
