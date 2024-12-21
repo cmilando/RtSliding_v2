@@ -1,7 +1,7 @@
 # --- Initialize ---
 set.seed(123)
 xsigma = 0.1
-tau = 14
+tau = 1
 maxt = 80
 sip = c(0.1, 0.2, 0.3, 0.2, 0.1, 0.05, 0.05)
 S = length(sip)
@@ -196,5 +196,27 @@ lines(x = (tau+1):maxt, y = Rlist_ub, type = 'l')
 lines(x = 2:maxt, y = RT_calc, col = 'red')
 
 
+#' ============================================================================
+#' Plots
+#' ============================================================================
 
+# Adjust graphics parameters for side-by-side plots
+par(mfrow = c(1, 2))  # Two plots in one row
+
+# Plot 1: M(t)
+plot(Mlist_med, type = 'l', col = 'blue', ylab = 'M(t) Values', xlab = 'Time', lwd = 2,
+     main = 'M(t) with CI')
+lines(Mlist_lb, type = 'l', col = 'blue', lty = 2)
+lines(Mlist_ub, type = 'l', col = 'blue', lty = 2)
+points(NOBS, col = 'red', pch = 16)  # Observations in red
+
+# Plot 2: R(t)
+plot(x = (tau+1):maxt, y = Rlist_med, type = 'l', col = 'green', ylab = 'R(t) Values', xlab = 'Time',
+     lwd = 2, main = 'R(t) with CI')
+lines(x = (tau+1):maxt, y = Rlist_lb, type = 'l', col = 'green', lty = 2)
+lines(x = (tau+1):maxt, y = Rlist_ub, type = 'l', col = 'green', lty = 2)
+lines(x = 2:maxt, y = RT_calc, col = 'red', lwd = 2)
+
+# Reset graphical parameters to default
+par(mfrow = c(1, 1))
 
