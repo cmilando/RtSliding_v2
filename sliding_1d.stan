@@ -17,8 +17,8 @@ parameters {
 transformed parameters {
 
   // expected value of cases, **J** each gets its own window, lots of zeros
-  real<lower=0.00001> M[N, max_ww] = rep_array(0.1, N, max_ww);
-  real<lower=0.00001> R[max_ww] = rep_array(1, max_ww);
+  real<lower=0> M[N, max_ww] = rep_array(0.1, N, max_ww);
+  real<lower=0> R[max_ww] = rep_array(1, max_ww);
 
   // ------ CALCULATE R(t) and INITIALIZE M[1] -------------
   // get R in exp() space for each window

@@ -1,7 +1,7 @@
 # --- Initialize ---
 set.seed(123)
 xsigma = 0.1
-tau = 7
+tau = 1
 maxt = 80
 sip = c(0.1, 0.2, 0.3, 0.2, 0.1, 0.05, 0.05)
 S = length(sip)
@@ -136,11 +136,15 @@ stan_data <- list(
 )
 
 library(rstan)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
 
 initf1 <- function() {
   # M[N, max_ww]
   list(logR = rep(0,times = max_ww))
 }
+
+# if this fails, its mostly in the initialization it seems
 
 m_hier <- rstan::stan(file = 'sliding_1d.stan',
                       data = stan_data,
@@ -177,11 +181,6 @@ lines(Mlist_lb, type = 'l')
 lines(Mlist_ub, type = 'l')
 points(NOBS, col = 'red')
 
-## ***********
-## FIXED TO HERE 12.21.2024 at 2:50am you monster go to sleep
-## THERE IS JUST MORE OFFSET BY 1 STUFF TO FIX
-## ***********
-
 # -- RT
 # ok for each value of M, its a function of those specific winwos
 # REMEBER THAT THESE ARE FOR TAU
@@ -196,6 +195,6 @@ lines(x = (tau+1):maxt, y = Rlist_lb, type = 'l')
 lines(x = (tau+1):maxt, y = Rlist_ub, type = 'l')
 lines(x = 2:maxt, y = RT_calc, col = 'red')
 
-## --------------------------------------------------------------
+
 
 
