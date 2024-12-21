@@ -1,7 +1,7 @@
 # --- Initialize ---
 set.seed(123)
 xsigma = 0.1
-tau = 1
+tau = 7
 maxt = 80
 sip = c(0.1, 0.2, 0.3, 0.2, 0.1, 0.05, 0.05)
 S = length(sip)
@@ -59,19 +59,18 @@ get_Mt <- function(Rt, init_cases, w) {
     inner_vec = 0
     sip_i = min(length(w), t - 1)
     for(si in 1:sip_i) {
-      print(si)
+      #print(si)
       inner_vec = inner_vec + w[si] * Mout[t - si]
     }
     rt_offset = t - 1
     Mout[t] = Rt[rt_offset] * inner_vec
 
   }
-  Mout
   return(Mout)
 }
 
 MTRUE <- get_Mt(R_TRUE_matrix, init_cases, sip)
-MTRUE
+#MTRUE
 
 plot(MTRUE, type = 'l')
 NOBS <- sapply(MTRUE, function(x) rpois(1, x))
@@ -109,8 +108,8 @@ endN = tau + 1
 sliding_windows[window_i, ] = startN:endN
 
 for(window_i in 2:max_ww) {
-  startN = startN + tau
-  endN = endN + tau
+  startN = startN + 1
+  endN = endN + 1
   sliding_windows[window_i, ] = startN:endN
 }
 
@@ -122,6 +121,7 @@ for(i in 1:nrow(sliding_windows)) {
   }
 }
 dim(sliding_windows)
+head(sliding_windows)
 
 ## OK NOW< RUN IN 1 D
 stan_data <- list(
@@ -194,7 +194,7 @@ Rlist_ub <- apply(out$R, 2, quantile, probs = 0.975)
 plot(x = (tau+1):maxt, y = Rlist_med, type = 'l')
 lines(x = (tau+1):maxt, y = Rlist_lb, type = 'l')
 lines(x = (tau+1):maxt, y = Rlist_ub, type = 'l')
-lines(x = (tau+1):maxt, y = RT_calc, col = 'red')
+lines(x = 2:maxt, y = RT_calc, col = 'red')
 
 ## --------------------------------------------------------------
 
