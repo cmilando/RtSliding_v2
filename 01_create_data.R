@@ -1,5 +1,5 @@
 ## code to prepare ALL datasets goes here
-
+library(splines)
 
 #' -----------------------------------------
 ## shape parameter for serial interval assuming gamma distribution
@@ -17,35 +17,31 @@ w <- c(w/sum(w))
 
 plot(w)
 #' -----------------------------------------
-# Function 1: Quadratic
-Ra <- function(x) {
-  a <- 0.00001   # Adjusted cubic coefficient
-  b <- -0.0018   # Adjusted quadratic coefficient
-  c <- 0.05      # Adjusted linear coefficient
-  d <- 0.2       # Starting value
-  y <- a * x^3 + b * x^2 + c * x + d
-  # Rescale smoothly to the range [0.2, 3]
-  y <- (y - min(y)) / (max(y) - min(y)) * (2 - 0.2) + 0.2
-  return(y)
+
+getR <- function(peak_x, peak_val, max_x, startR = 1, endR = 0.2) {
+  # peak_x = 20
+  # peak_val = 1.5
+  # max_x = 80
+  #
+  x = 1:max_x
+  p1 <- seq(from = startR, to = peak_val, length.out = peak_x)
+  p2 <- seq(from = peak_val, to = endR, length.out = max_x - peak_x + 1)
+  R <- c(p1, p2[2:length(p2)])
+
+  b2 <- lm(R ~ bs(x, knots = peak_x, degree = 3, intercept = F))
+  b2.pred <- predict(b2)
+  # plot(x, R)
+  # lines(x, b2.pred, col = 'red')
+
+  return(b2.pred)
+
 }
 
-# Function 2: Cubic
-Rb <- function(x) {
-  a <- 0.00001  # Coefficient for cubic term
-  b <- -0.002   # Coefficient for quadratic term
-  c <- 0.1      # Coefficient for linear term
-  d <- 0.3      # Starting point
-  y <- a * x^3 + b * x^2 + c * x + d
-  y <- pmax(pmin(y, 3), 0.2)
-  return(y)
-}
-
-tmax <- 80
-
-Rmatrix = cbind(Ra(1:tmax), Rb(1:tmax))
+tmax = 80
+Rmatrix = cbind(R(20, 2, 80), R(40, 1.8, 80))
 head(Rmatrix)
-plot(1:tmax, Ra(1:tmax), type = 'l')
-lines(1:tmax, Rb(1:tmax), type = 'l', col = 'red')
+plot(1:tmax, Rmatrix[,1], type = 'l')
+lines(1:tmax, Rmatrix[,2], type = 'l', col = 'red')
 
 M <- matrix(NA, nrow = tmax + 1, ncol = 2)
 N <- matrix(NA, nrow = tmax + 1, ncol = 2)
@@ -148,7 +144,7 @@ for(t in 1:tmax) {
   head(R_this)
 }
 
-# Now, reset M and N
+# Now, reset M and N to remove initial cases
 M <- M[2:nrow(M),]
 N <- N[2:nrow(N),]
 

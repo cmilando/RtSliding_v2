@@ -26,6 +26,10 @@ transformed parameters {
   // get R in exp() space
   for(j in 1:J) {
     for(n in 1:N) {
+      ///
+      // int start_W = max(1, n - SWcol + 1);
+      // int end_W = min(n, SWrow);
+      ///
       R[n, j] = exp(logR[n, j]);
     }
   }
@@ -84,15 +88,32 @@ model {
       xbeta[, j] ~ normal(0, 1);
 
       // sample logR
-      for(ww in 1:SWrow) {
-        // beginning of the sliding window
-        int start_W = SW[ww, 1];
-        // end of the sliding window
-        int end_W   = SW[ww, SWcol];
-        // each block of R(t)
-        // so each block of R(t) belongs to a different xbeta
-        // each xbeta is for each window
-        logR[start_W:end_W, j] ~ normal(xbeta[ww, j], xsigma[j]);
+      // for(ww in 1:SWrow) {
+      //  // beginning of the sliding window
+      //  int start_W = SW[ww, 1];
+      //  // end of the sliding window
+      //  int end_W   = SW[ww, SWcol];
+      //  // each block of R(t)
+      //  // so each block of R(t) belongs to a different xbeta
+      //  // each xbeta is for each window
+      //  logR[start_W:end_W, j] ~ normal(xbeta[ww, j], xsigma[j]);
+      // }
+
+      // maybe you have to do it another way
+      // instead of by window, doing it by n
+      for(n in 1:N) {
+
+        // PART 1
+        // VECTOR of variable length
+        // REPRESENTING all the windows that n falls into
+        // ww_vec = ....
+         int start_W = max(1, n - SWcol + 1);
+         int end_W = min(n, SWrow);
+         real mean_beta = mean(xbeta[start_W:end_W, j]);
+
+        // PART 2
+        logR[n, j] ~ normal(mean_beta, xsigma[j]);
+
       }
 
   }

@@ -2,8 +2,8 @@
 source('01_create_data.R')
 
 site_names <- colnames(sample_multi_site)[c(2, 3)]
-plot(sample_multi_site$date, y = sample_multi_site$Tatooine, col = 'red')
-points(sample_multi_site$date, y = sample_multi_site$Hoth, col = 'blue')
+plot(sample_multi_site$date, y = sample_multi_site$Hoth, col = 'red')
+points(sample_multi_site$date, y = sample_multi_site$Tatooine, col = 'blue')
 
 Y <- matrix(integer(1), nrow = nrow(sample_multi_site), ncol = 2)
 for(i in 1:nrow(Y)) {
@@ -85,6 +85,62 @@ for(i in 1:nrow(sliding_windows)) {
 
 sliding_windows
 
+# ------------------------
+
+# int<lower=1> N;          // the number of observations.
+# int<lower=1> tau;      // sw_col -- aka sliding window size
+# int<lower=1> max_ww;      // sw_row
+# int SW[max_ww,tau];     // sliding window matrix
+# int<lower=0> Y[N];       // observed cases. **J**
+#   int<lower=1> S;          // length of serial interval
+# vector[S] W;             // serial interval
+# int init_cases;          // initial cases **J**
+
+# Data list for Stan
+# also need to do data validation here
+stan_data <- list(
+  N = 7,                 # number of days
+  tau = tau,
+  max_ww = SWrow,
+  SW = matrix(sliding_windows[1,],nrow =SWrow),
+  Y = case_matrix[1:7,1],        # cases
+  S = 2,                          # serial interval length
+  W = c(0.5, 0.5),                # serial interval vector
+  init_cases = c(100)     # initial cases
+)
+
+library(rstan)
+
+m_hier <- rstan::stan(file = 'sliding_1d.stan',
+                      data = stan_data,
+                      verbose = T,
+                      iter = 2000,
+                      cores = 1,
+                      chains = 1)
+
+out <- rstan::extract(m_hier)
+
+dim(out$M)
+dim(out$R)
+
+summary(out$R)
+
+summary(out$M)
+M
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -------------------------
 # Data list for Stan
 # also need to do data validation here
 stan_data <- list(
@@ -97,26 +153,13 @@ stan_data <- list(
   P = transfer_matrix,    # transfer matrix
   S = length(sip),        # serial interval length
   W = sip,                # serial interval vector
-  init_cases = case_matrix[1, ]     # initial cases
+  init_cases = c(100, 100)     # initial cases
 )
-
-
-initf1 <- function() {
-  #
-  # vector<lower=0.00005>[J] xsigma;  // region-specific st-dev
-  # matrix[NW,J] xbeta;         // time-region specific beta
-  # matrix[NW,J] logR;          // time-region specific R values, in Log space
-  #
-  list(xsigma = rep(0.1, ncol(case_matrix)),
-       xbeta = matrix(0, nrow = SWrow, ncol = ncol(case_matrix)),
-       logR = matrix(0.1, nrow = NN, ncol = ncol(case_matrix)))
-}
 
 library(rstan)
 
 m_hier <- rstan::stan(file = 'sliding.stan',
                       data = stan_data,
-                      init = initf1,
                       verbose = T,
                       iter = 2000,
                       cores = 4,
@@ -124,154 +167,46 @@ m_hier <- rstan::stan(file = 'sliding.stan',
 
 out <- rstan::extract(m_hier)
 
-out
+### first step -- is it making betas smoother? Yes
 
-# library(shinystan)
-# shinystan::launch_shinystan(m_hier)
-
-dim(out$M)
-dim(out$xsigma)
-
-dim(out$xbeta)
-dim(out$logR)
-
-xx <- t(out$logR[, , 1])
-head(xx)
-xx_m <- exp(apply(xx, 1, quantile, probs = 0.5))
-xx_l <- exp(apply(xx, 1, quantile, probs = 0.025))
-xx_u <- exp(apply(xx, 1, quantile, probs = 0.975))
-xx_l
-plot(xx_m)
-lines(x = 1:80, y = xx_l)
-lines(x = 1:80, y = xx_u)
-abline(v= tau)
-
-xx <- t(out$logR[, , 2])
-head(xx)
-xx_m <- exp(apply(xx, 1, quantile, probs = 0.5))
-xx_l <- exp(apply(xx, 1, quantile, probs = 0.025))
-xx_u <- exp(apply(xx, 1, quantile, probs = 0.975))
-xx_l
-plot(xx_m)
-lines(x = 1:80, y = xx_l)
-lines(x = 1:80, y = xx_u)
-abline(v= tau)
-
-xx <- t(out$Y_out[, , 2])
+xx <- t(out$xbeta[, , 1])
 dim(xx)
-xx_m <- apply(xx, 1, quantile, probs = 0.5)
+beta_m <- apply(xx, 1, quantile, probs = 0.5)
 xx_l <- apply(xx, 1, quantile, probs = 0.025)
 xx_u <- apply(xx, 1, quantile, probs = 0.975)
 
-plot(xx_m)
+plot(beta_m)
+lines(xx_l)
+lines(xx_u)
+
+#### second test -- is that affecting logR? -- seems like no
+## why not?
+
+xx <- t(out$logR[, , 1])
+Rt <- exp(apply(xx, 1, quantile, probs = 0.5))
+xx_l <- exp(apply(xx, 1, quantile, probs = 0.025))
+xx_u <- exp(apply(xx, 1, quantile, probs = 0.975))
+
+plot(Rt)
 lines(x = 1:80, y = xx_l)
 lines(x = 1:80, y = xx_u)
 
+lines(Rmatrix[,1], col = 'green')
+lines(R_rev[,1], col = 'red')
+lines(R_this[,1], col = 'red')
 
+#### second test -- is that affecting logR? -- seems like no
+## why not?
 
-data_l <- lapply(1:dim(out$M)[3], function(i) {
-  data.frame(
-    x      = 1:dim(out$M)[2],
-    y_real = Y[, i],
-    y      = apply(out$M[, , i], 2, mean),
-    yl     = apply(out$M[, , i], 2, quantile, probs = 0.025),
-    yh     = apply(out$M[, , i], 2, quantile, probs = 0.975),
-    Rt     = apply(out$R[, , i], 2, mean),
-    Rtl    = apply(out$R[, , i], 2, quantile, probs = 0.025),
-    Rth    = apply(out$R[, , i], 2, quantile, probs = 0.975),
-    region = site_names[i] # must be a string
-  )
-})
+xx <- t(out$Y_out[, , 1])
+Y_o <- apply(xx, 1, quantile, probs = 0.5)
+xx_l <- apply(xx, 1, quantile, probs = 0.025)
+xx_u <- apply(xx, 1, quantile, probs = 0.975)
 
+plot(Y_o)
+lines(x = 1:80, y = xx_l)
+lines(x = 1:80, y = xx_u)
 
-
-
-
-data_all <- do.call(rbind, data_l)
-head(data_all)
-dim(data_all)
-
-# Summarise data
-data_all_summarise <- aggregate(
-  cbind(y, y_real, yl, yh, Rt, Rtl, Rth) ~ x + region,
-  data = data_all,
-  FUN = mean
-)
-
-head(data_all_summarise)
-head(data_all)
-
-data_all_summarise <- data_all
-
-# Generate a color palette
-regions <- unique(data_all_summarise$region)
-# Define a set of distinct colors
-colors <- c("red", "blue", "green", "purple", "orange", "brown",
-            "pink", "yellow", "cyan", "magenta")
-colors <- colors[1:length(regions)]
-names(colors) <- regions
-
-# Plot expected cases
-plot(
-  x = as.integer(data_all_summarise$x),
-  y = as.numeric(data_all_summarise$y),
-  type = "n",
-  xlab = "Days",
-  ylab = "Cases",
-  main = "Expected Cases"
-)
-
-for (region_i in regions) {
-  region_data <- subset(data_all_summarise, region == region_i)
-  points(x = region_data$x, region_data$y_real, col = colors[region_i])
-  polygon(
-    c(region_data$x, rev(region_data$x)),
-    c(region_data$yl, rev(region_data$yh)),
-    col = adjustcolor(colors[region_i], alpha.f = 0.3), border = NA
-  )
-  lines(region_data$x, region_data$y, col = colors[region_i], lwd = 0.5)
-}
-
-
-lines(M[,1], type = 'l', col = 'blue')
-lines(N[, 1], col = 'blue')
-lines(M[,2], type = 'l', col = 'red')
-lines(N[, 2], col = 'red')
-
-legend("topright",
-       legend = regions,
-       col = colors,
-       lty = rep(1, length(regions)),
-       cex = 0.8,
-       pt.cex = 1.5 ) # Text size
-
-# Plot R(t)
-plot(
-  data_all_summarise$x, data_all_summarise$Rt,
-  xlab = "Days", ylab = "Reproduction Number",
-  type = "n",
-  main = "R(t)",
-  ylim = c(0, 5)
-)
-for (region_i in regions) {
-  region_data <- subset(data_all_summarise, region == region_i)
-  polygon(
-    c(region_data$x, rev(region_data$x)),
-    c(region_data$Rtl, rev(region_data$Rth)),
-    col = adjustcolor(colors[region_i], alpha.f = 0.3), border = NA
-  )
-  lines(region_data$x, region_data$Rt, col = colors[region_i], lwd = 0.5)
-}
-abline(h = 1, col = "black", lwd = 1, lty = 1)
-
-lines(R_rev[,1], type = 'l', col = 'blue')
-lines(R_this[, 1], col = 'blue')
-lines(R_rev[,2], type = 'l', col = 'red')
-lines(R_this[, 2], col = 'red')
-
-legend("topright",
-       legend = regions,
-       col = colors,
-       lty = c(1, 1),
-       cex = 0.8,
-       pt.cex = 1.5 ) # Text size
+lines(Rmatrix[,1], col = 'green')
+lines(R_rev[,1], col = 'red')
+lines(R_this[,1], col = 'red')
