@@ -1,12 +1,12 @@
 data {
   int<lower=1> N;          // the number of observations.
   int<lower=1> tau;        // sliding window size
-  int<lower=1> t1;          // the number of observations.
   int<lower=1> max_ww;     // sw_row
-  int SW[max_ww,t1];      // sliding window matrix
+  int SW[max_ww,tau];      // sliding window matrix
   int<lower=0> Y[N];       // observed cases.
   int<lower=1> S;          // length of serial interval
   vector[S] W;             // serial interval
+  real init_cases;          // initial cases
 }
 
 parameters {
@@ -23,11 +23,7 @@ transformed parameters {
   // ------ CALCULATE R(t) and INITIALIZE M[1] -------------
   // get R in exp() space for each window
   for(ww in 1:max_ww) {
-    // First, get the R of this window
     R[ww] = exp(logR[ww]);
-    //R[ww] = exp(xbeta[ww]);
-    // initialize
-    M[1, ww] = Y[1]; // **J**
   }
 
   // ------ CALCULATE M(t) -------------
@@ -40,18 +36,43 @@ transformed parameters {
 
       // ok now for each of these get the Ms that occur only for these windows
       // the question is, what to do about
-      for(m_i in startN:endN) {
+      for(t in startN:endN) {
+
         real inner_vec = 0;
-        int sip_i = min(S, startN);
-        for(si in 1:sip_i) {
-          inner_vec = inner_vec + W[si] * M[(m_i + 1) - si, ww];
+        int S_loop_max = min(S, t + 1);
+        int  forward_vec[S_loop_max];
+        int  rev_vec[S_loop_max];
+        for(si in 1:S_loop_max) {
+          forward_vec[si] = si;
+          rev_vec[si] = t + 1 - si;
         }
-        M[(m_i + 1), ww] = R[ww] * inner_vec;
+        real mx = 0;
+
+        for(si in 1:S_loop_max) {
+          int rev_i = rev_vec[si];
+
+          if(rev_i < 0) {
+            mx = 0;
+          }
+
+          if(rev_i == 0) {
+            mx = init_cases;
+          }
+
+          if(rev_i > 0){
+            mx = M[rev_i, ww];
+          }
+
+          inner_vec = inner_vec + W[si] * mx;
+        }
+        M[t, ww] = R[ww] * inner_vec;
       }
 
       // carry across
-      for(wremain in min(ww + 1, max_ww):max_ww) {
-        M[(startN + 1), wremain] = M[(startN + 1),ww];
+      if(startN < N) {
+        for(wremain in min(ww + 1, max_ww):max_ww) {
+          M[startN , wremain] = M[startN, ww];
+        }
       }
 
 
@@ -75,8 +96,8 @@ model {
   for(ww in 1:max_ww) {
 
       // Offset by 1 because its the end of the window
-      int startN = SW[ww, 2];
-      int endN   = SW[ww, t1];
+      int startN = SW[ww, 1];
+      int endN   = SW[ww, tau];
 
       // SO THIS ENFORCES THAT THE OBSERVED CASES
       // ARE DRAWN FROM ALL OF THE WINDOWS THAT THIS DAY FALLS INTO
