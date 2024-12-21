@@ -1,7 +1,7 @@
 # --- Initialize ---
 set.seed(123)
 xsigma = 0.1
-tau = 1
+tau = 14
 maxt = 80
 sip = c(0.1, 0.2, 0.3, 0.2, 0.1, 0.05, 0.05)
 S = length(sip)
