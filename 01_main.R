@@ -258,12 +258,14 @@ lines(Mlist_ub, type = 'l', col = 'blue', lty = 2)
 points(NOBS, col = 'black')
 
 # Plot 2: R(t)
-plot(x = tau:maxt, y = Rlist_med, type = 'l',
-     col = 'green', ylab = 'R(t) Values', xlab = 'Time',
-     lwd = 2, main = 'R(t) with CI')
+plot(x = 1:maxt, y = RT_calc, col = 'red', lwd = 1, type = 'l',
+     ylab = 'R(t) Values', xlab = 'Time',
+     main = 'R(t) with CI')
+lines(x = tau:maxt, y = Rlist_med, type = 'l',
+     col = 'green')
 # lines(x = (tau):maxt, y = Rlist_lb, type = 'l', col = 'green', lty = 2)
 # lines(x = (tau):maxt, y = Rlist_ub, type = 'l', col = 'green', lty = 2)
-lines(x = 1:maxt, y = RT_calc, col = 'red', lwd = 1)
+
 
 
 # Plot 2b: compared with epiEstim
@@ -299,7 +301,8 @@ lines(x = epiE_x, y = epiE_med, type = 'l',
 # lines(x = epiE_x, y = epiE_ub, type = 'l',
 #       col = 'purple', lty = 2)
 
-abline(v = S)
+abline(v = tau)
+abline(v = tau + S - 1)
 
 # Reset graphical parameters to default
 par(mfrow = c(1, 1))
