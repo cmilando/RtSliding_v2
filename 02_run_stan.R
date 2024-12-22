@@ -16,71 +16,10 @@ dim(sliding_windows)
 head(sliding_windows)
 tail(sliding_windows)
 
-#' #' ============================================================================
-#' ## OK NOW< RUN IN 1 D
-#' stan_data <- list(
-#'   N = maxt,                  # number of days
-#'   tau = tau,                 #
-#'   max_ww = max_ww,           #
-#'   SW = sliding_windows,      #
-#'   Y = NOBS,                  # cases
-#'   S = length(sip),           # serial interval length
-#'   W = sip                   # serial interval vector
-#' )
-#'
-#' initf1 <- function() {
-#'   list(logR = rep(0,times = max_ww))
-#' }
-#'
-#' # if this fails, its mostly in the initialization it seems
-#'
-#' m_hier <- rstan::stan(file = 'sliding_1d.stan',
-#'                       data = stan_data,
-#'                       iter = 2000,
-#'                       init = initf1,
-#'                       cores = 1,
-#'                       chains = 1)
-#'
-#' #' ============================================================================
-#' stan_data_init <- list(
-#'   N = maxt,                  # number of days
-#'   tau = tau,                 #
-#'   max_ww = max_ww,           #
-#'   SW = sliding_windows,      #
-#'   Y = NOBS,                  # cases
-#'   S = length(sip),           # serial interval length
-#'   W = sip,                   # serial interval vector
-#'   init_cases = init_cases
-#' )
-#'
-#' # if this fails, its mostly in the initialization it seems
-#'
-#' m_hier_init <- rstan::stan(file = 'sliding_1d_w_init.stan',
-#'                       data = stan_data_init,
-#'                       iter = 2000,
-#'                       init = initf1,
-#'                       cores = 1,
-#'                       chains = 1)
-#'
-#' #' ============================================================================
-#' stan_data_gamma <- list(
-#'   N = maxt,                  # number of days
-#'   tau = tau,                 #
-#'   max_ww = max_ww,           #
-#'   SW = sliding_windows,      #
-#'   Y = NOBS,                  # cases
-#'   S = length(sip),           # serial interval length
-#'   W = sip                   # serial interval vector
-#' )
-#'
-#' # if this fails, its mostly in the initialization it seems
-#'
-#' m_hier_gamma <- rstan::stan(file = 'sliding_1d_gamma.stan',
-#'                            data = stan_data_gamma,
-#'                            iter = 2000,
-#'                            init = initf1,
-#'                            cores = 1,
-#'                            chains = 1)
+# -- Also get reveresed sliding windows --
+SWT = get_SWT(sliding_windows, tau, maxt)
+dim(SWT)
+head(SWT)
 
 #' ============================================================================
 stan_data_onY <- list(
@@ -88,17 +27,16 @@ stan_data_onY <- list(
   tau = tau,                 #
   max_ww = max_ww,           #
   SW = sliding_windows,      #
+  SWT = SWT,
   Y = NOBS,                  # cases
   S = length(sip),           # serial interval length
   W = sip                   # serial interval vector
 )
 
 # if this fails, its mostly in the initialization it seems
-
-m_hier_onY <- rstan::stan(file = 'sliding_1d.stan',
+m_hier_onY <- rstan::stan(file = 'sliding_1d_simple.stan',
                             data = stan_data_onY,
                             iter = 2000,
-                            init = initf1,
                             cores = 1,
                             chains = 1)
 

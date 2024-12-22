@@ -188,3 +188,33 @@ get_SW <- function(maxt, tau) {
   return(sliding_windows)
 
 }
+
+#' Get transformed sliding_window matrix
+#'
+#' @param SW
+#' @param tau
+#' @param maxt
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_SWT <- function(SW, tau, maxt) {
+
+  SWT <- matrix(data = 0, nrow = maxt, ncol = tau)
+
+  for(n in 2:maxt) {
+    these_ind = c()
+    for(ww in 1:nrow(SW)) {
+      if(n >= SW[ww, 1] & n <= SW[ww, 2]) these_ind <- c(these_ind, ww)
+    }
+    these_ind
+    SWT[n, 1:length(these_ind)] = these_ind
+  }
+  for(i in 1:nrow(SW)) {
+    for(j in 1:ncol(SW)) {
+      SW[i,j] <- as.integer(SW[i, j])
+    }
+  }
+  return(SWT)
+}
