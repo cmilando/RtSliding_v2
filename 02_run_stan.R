@@ -3,7 +3,7 @@
 #' ============================================================================
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 1
+tau        = 2
 max_ww     = maxt - tau + 1
 
 # --- set up sliding window ---
@@ -25,17 +25,40 @@ for(w in 1:max_ww) {
   Y_w[w] = sum(NOBS[startN:endN])
 }
 head(Y_w)
+tail(Y_w)
+tail(NOBS)
 
-N_w = max_ww
+# Can you recover Y from Y_w and max_ww
+# yes because you know what M[1] is
+Y_recovered = vector("numeric", length = length(NOBS))
 
-N_w
+A <- matrix(0, nrow = max_ww, ncol = maxt)
+
+# Fill the design matrix
+for (w in 1:max_ww) {
+  startN <- sliding_windows[w, 1]
+  endN <- sliding_windows[w, 2]
+  A[w, startN:endN] <- 1
+}
+
+# ok now add your knowns
+A0 = matrix(0, nrow = 1, ncol = maxt)
+A0[1, 1] = 1
+Y0 = NOBS[1]
+
+Afull = rbind(A0, A)
+Yfull = c(Y0, Y_w)
+
+NOBS_recovered <- solve(Afull, Yfull)
+
+NOBS_recovered
 
 #' ============================================================================
 stan_data <- list(
-  N = N_w,         # number of days
-  Y = Y_w,                 # cases
-  S = length(sip),          # serial interval length
-  W = sip                  # serial interval vector
+  N = N_w,                # number of days
+  Y = Y_w,                # cases
+  S = length(sip),        # serial interval length
+  W = sip                 # serial interval vector,
 )
 
 # if this fails, its mostly in the initialization it seems
