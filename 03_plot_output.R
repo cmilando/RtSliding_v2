@@ -4,11 +4,11 @@
 out <- rstan::extract(m_hier_onY)
 
 # -- OBSERVATIONS
-# Mlist_med <- apply(out$M, 2, quantile, probs = 0.5)
-# Mlist_lb <- apply(out$M, 2, quantile, probs = 0.025)
-# Mlist_ub <- apply(out$M, 2, quantile, probs = 0.975)
-#
-# stopifnot(length(Mlist_med) == maxt)
+Mlist_med <- apply(out$M, 2, quantile, probs = 0.5)
+Mlist_lb <- apply(out$M, 2, quantile, probs = 0.025)
+Mlist_ub <- apply(out$M, 2, quantile, probs = 0.975)
+
+stopifnot(length(Mlist_med) == maxt)
 
 # -- RT
 # ok for each value of M, its a function of those specific winwos
@@ -67,22 +67,22 @@ Ryrange
 #' Plots
 #' ============================================================================
 
-# # --------------------
-# # Adjust graphics parameters for side-by-side plots
-# par(mfrow = c(1, 2))  # Two plots in one row
-#
-# # --------------------
-# # Plot 1: M(t)
-# # --------------------
-# plot(NOBS, col = 'black', cex = 0.8, type = 'p',
-#      ylab = 'M(t) Values', xlab = 'Day',
-#      main = paste0('M(t) for tau = ',tau))
-# polygon(c(1:maxt, rev(1:maxt)), c(Mlist_lb, rev(Mlist_ub)),
-#         col = rgb(0, 0, 1, 0.2), border = NA)
-# lines(Mlist_med, type = 'l', col = 'blue',lwd = 1.5)
-# legend("topright", legend = c("Observed", "STAN"),
-#        col = c("black", "blue"),
-#        lty = 1, lwd = 2, cex = 0.8)
+# --------------------
+# Adjust graphics parameters for side-by-side plots
+par(mfrow = c(1, 2))  # Two plots in one row
+
+# --------------------
+# Plot 1: M(t)
+# --------------------
+plot(NOBS, col = 'black', cex = 0.8, type = 'p',
+     ylab = 'M(t) Values', xlab = 'Day',
+     main = paste0('M(t) for tau = ',tau))
+polygon(c(1:maxt, rev(1:maxt)), c(Mlist_lb, rev(Mlist_ub)),
+        col = rgb(0, 0, 1, 0.2), border = NA)
+lines(Mlist_med, type = 'l', col = 'blue',lwd = 1.5)
+legend("topright", legend = c("Observed", "STAN"),
+       col = c("black", "blue"),
+       lty = 1, lwd = 2, cex = 0.8)
 
 # --------------------
 # Plot 2: R(t)

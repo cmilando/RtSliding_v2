@@ -55,7 +55,8 @@ NOBS_recovered
 
 #' ============================================================================
 stan_data <- list(
-  N = N_w,                # number of days
+  N_windows = N_w,        # number of windows
+  N_obs = maxt,           # number of observations
   Y = Y_w,                # cases
   S = length(sip),        # serial interval length
   W = sip                 # serial interval vector,
