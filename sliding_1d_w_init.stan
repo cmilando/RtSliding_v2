@@ -6,6 +6,7 @@ data {
   int<lower=0> Y[N];       // observed cases.
   int<lower=1> S;          // length of serial interval
   vector[S] W;             // serial interval
+  real init_cases;          // initial cases
 }
 
 parameters {
@@ -25,8 +26,6 @@ transformed parameters {
   // get R in exp() space for each window
   for(ww in 1:max_ww) {
     R[ww] = exp(logR[ww]);
-    //
-    M[1, ww] = Y[1] * 1.0;
   }
 
   // ------ CALCULATE M(t) -------------
@@ -56,11 +55,15 @@ transformed parameters {
         for(si in 1:S_loop_max) {
           int rev_i = rev_vec[si];
 
-          if(rev_i < 1) {
+          if(rev_i < 0) {
             mx = 0;
           }
 
-          if(rev_i >= 1){
+          if(rev_i == 0) {
+            mx = init_cases;
+          }
+
+          if(rev_i > 0){
             mx = M[rev_i, ww];
           }
 
