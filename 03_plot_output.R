@@ -33,7 +33,11 @@ epiE_ub = res$R$`Quantile.0.975(R)`
 #
 # REMEBER THAT THE X HERE IS FOR WINDOW,
 # So first, get the windows that EpiEstim are using
+
+# so this will always be N - 1
 dim(out$R)
+any(is.na(out$R))
+
 first_w = -1
 i = 1
 while(first_w < 0) {
@@ -49,9 +53,9 @@ Rlist_x = sliding_windows[first_w:max_ww, 2]
 stopifnot(identical(Rlist_x, epiE_x))
 
 ##
-Rlist_med <-apply(out$R, 2, quantile, probs = 0.5)[first_w:max_ww]
-Rlist_lb <- apply(out$R, 2, quantile, probs = 0.025)[first_w:max_ww]
-Rlist_ub <- apply(out$R, 2, quantile, probs = 0.975)[first_w:max_ww]
+Rlist_med <- c(NA, apply(out$R, 2, quantile, probs = 0.5))[first_w:max_ww]
+Rlist_lb <- c(NA,apply(out$R, 2, quantile, probs = 0.025))[first_w:max_ww]
+Rlist_ub <- c(NA,apply(out$R, 2, quantile, probs = 0.975))[first_w:max_ww]
 ##
 
 ##
@@ -85,11 +89,11 @@ legend("topright", legend = c("Observed", "STAN"),
 # --------------------
 plot(x = 1:maxt, y = RT_calc, col = 'black', lwd = 1, type = 'l',
      ylab = 'R(t) Values', xlab = 'Day', lty = 3,
-     ylim = Ryrange,
-     #ylim = c(0, 2),
+     #ylim = Ryrange,
+     ylim = c(0, 2),
      main = paste0('R(t) for tau = ',tau))
 
-plot_a = 0.05
+plot_a = 0.1
 
 ##
 lines(x = Rlist_x, y = Rlist_med, type = 'l', col = 'blue')

@@ -14,8 +14,10 @@ parameters {
 
 transformed parameters {
 
-  // expected value of cases, **J** each gets its own window, lots of zeros
+  // expected value of cases,
   real<lower=0> M[N] = rep_array(0.001, N);
+
+  // no matter what N is, R will always be 1 less
   real<lower=0> R[N-1] = rep_array(0.1, N-1);
 
   // ------ CALCULATE R(t) and INITIALIZE M[1] -------------
@@ -23,7 +25,6 @@ transformed parameters {
   for(w in 1:(N-1)) {
     R[w] = exp(logR[w]);
     //
-
   }
 
   // Initialize
@@ -71,7 +72,7 @@ transformed parameters {
 }
 
 
-// THIS IS GOOD DON'T CHANGE IT
+// Keep this simple
 model {
 
   // ------ SIGMA, BETA, and LogR ------
