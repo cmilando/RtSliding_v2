@@ -3,7 +3,7 @@
 #' ============================================================================
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 2
+tau        = 4
 max_ww     = maxt - tau + 1
 
 # --- set up sliding window ---
@@ -11,6 +11,7 @@ max_ww     = maxt - tau + 1
 # You can only do this because you know what init_cases is, this is just
 # used for
 sliding_windows = get_SW(maxt, tau)
+sliding_windows
 
 dim(sliding_windows)
 head(sliding_windows)
@@ -27,10 +28,10 @@ for(w in 1:max_ww) {
 head(Y_w)
 tail(Y_w)
 tail(NOBS)
-
-# Can you recover Y from Y_w and max_ww
-# yes because you know what M[1] is
-Y_recovered = vector("numeric", length = length(NOBS))
+#
+# # Can you recover Y from Y_w and max_ww
+# # yes because you know what M[1] is
+# Y_recovered = vector("numeric", length = length(NOBS))
 
 A <- matrix(0, nrow = max_ww, ncol = maxt)
 
@@ -42,34 +43,75 @@ for (w in 1:max_ww) {
 }
 
 # ok now add your knowns
-A0 = matrix(0, nrow = 1, ncol = maxt)
-A0[1, 1] = 1
-Y0 = NOBS[1]
+if(tau > 1){
+  A0 = matrix(0, nrow = (tau - 1), ncol = maxt)
+  A = rbind(A0, A)
+  # then just fill in as diagonal matrix
+  for(tt in 1:(tau-1)) {
+    A[tt, tt] = 1
+  }
+}
+dim(A)
+stopifnot(ncol(A) == nrow(A))
+A
+A
 
-Afull = rbind(A0, A)
-Yfull = c(Y0, Y_w)
-
-NOBS_recovered <- solve(Afull, Yfull)
-
+if(tau > 1) {
+  Yfull <- Y_w
+  for(tt in 1:(tau-1)) {
+    Yfull = c(NOBS[tt], Yfull)
+  }
+} else {
+  Yfull <- NOBS
+}
+NOBS
+Yfull
+#
+NOBS_recovered <- solve(A, Yfull)
+#
 NOBS_recovered
+NOBS
+
+#solve(A, c(8,30,8.15485,18.5264))
 
 #' ============================================================================
 stan_data <- list(
-  N_windows = N_w,        # number of windows
+  N_windows = max_ww,        # number of windows
   N_obs = maxt,           # number of observations
-  Y = Y_w,                # cases
+  Y = NOBS,                # cases
   S = length(sip),        # serial interval length
-  W = sip                 # serial interval vector,
+  W = sip,                # serial interval vector,
+  SW = sliding_windows,
+  A = A,
+  tau = tau
 )
 
+
 # if this fails, its mostly in the initialization it seems
+# just has to be high enough to not fail
+initf1 = function() {
+   list(logR = rep(4, times = (max_ww-1)))
+}
+
+
 m_hier_onY <- rstan::stan(file = 'sliding_1d_simple.stan',
                             data = stan_data,
                             iter = 2000,
+                            init = initf1,
                             cores = 1,
                             chains = 1)
 
+# m_hier_onY <- rstan::stan(file = 'sliding_1d_simple_fixedTop.stan',
+#                           data = list(
+#                             N = max_ww,
+#                             Y = Y_w,
+#                             S = length(sip),
+#                             W = sip
+#                           ),
+#                           iter = 2000,
+#                           cores = 1,
+#                           chains = 1)
 
-## wow that seemed to work
-## so now, just move the summing inside STAN so you can get an M prediction
-## and you're good
+dim(out$M)
+
+source("03_plot_output.R")
