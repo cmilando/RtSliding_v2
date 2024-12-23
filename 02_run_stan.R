@@ -5,7 +5,7 @@
 source("01_simulate_data.R")
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 1
+tau        = 2
 max_ww     = maxt - tau
 M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 
@@ -14,6 +14,7 @@ M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 # You can only do this because you know what init_cases is, this is just
 # used for
 sliding_windows = get_SW(maxt, tau)
+sliding_windows
 dim(sliding_windows)
 head(sliding_windows)
 tail(sliding_windows)
