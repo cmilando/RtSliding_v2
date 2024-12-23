@@ -149,3 +149,108 @@ get_SW <- function(maxt, tau) {
   return(sliding_windows)
 
 }
+
+
+#' Get analytical R, the guts of EpiEstim
+#'
+#' @param incid
+#' @param sliding_windows
+#' @param sip
+#' @param mean_prior
+#' @param std_prior
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_analytical_R <- function(incid, sliding_windows, sip,
+                             mean_prior = 5, std_prior = 5) {
+
+  t_start <- sliding_windows[, 1]
+  t_end <- sliding_windows[, 2]
+  si_distr <- sip
+
+  ## SINCE R has a GAMMA PRIOR, you can skip to this
+  a_prior <- (mean_prior / std_prior)^2
+  b_prior <- std_prior^2 / mean_prior
+
+  #########################################################
+  overall_infectivity <- function(incid, si_distr) {
+    maxt <- length(incid)
+    lambda <- vector()
+    lambda[1] <- NA
+    for (t in seq(2, maxt)) {
+      lambda[t] <- sum(si_distr[seq_len(t)] * incid[seq(t, 1)], na.rm = TRUE)
+    }
+    return(lambda)
+  }
+
+  vnapply <- function(X, FUN, ...) {
+    vapply(X, FUN, numeric(1), ...)
+  }
+
+  #########################################################
+
+  nb_time_periods <- length(t_start)
+  seq_len(nb_time_periods)
+
+  ## <<< THIS IS A FUNCTION THAT INCLUDES M[0] <<<<<
+  lambda <- overall_infectivity(incid, si_distr)
+
+  ## SUM INCID, DOESN'T CHANGE WITH M[1]
+  a_posterior <-
+    vnapply(seq_len(nb_time_periods), function(t) {
+      a_prior + sum(incid[seq(t_start[t], t_end[t])])
+    })
+
+  ## SUM LAMBDA, DOES CHANGE WITH M[1]
+  b_posterior <-
+    vnapply(seq_len(nb_time_periods), function(t) {
+      1 / (1 / b_prior + sum(lambda[seq(t_start[t], t_end[t])]))
+    })
+
+  ## output
+  get_posterior <- function(q) {
+    median_posterior <- qgamma(q,
+                               shape = a_posterior,
+                               scale = b_posterior, lower.tail = TRUE, log.p = FALSE
+    )
+  }
+
+  out_df <- data.frame(
+    t_start, t_end, lb = get_posterior(0.025),
+    med = get_posterior(0.5),
+    ub = get_posterior(0.975)
+  )
+
+  return(out_df)
+}
+
+
+#' Get Gamma SI
+#'
+#' @param ndays
+#' @param shape
+#' @param rate
+#' @param leading0
+#'
+#' @return
+#' @export
+#'
+#' @examples
+si <- function(ndays, shape, rate, leading0 = TRUE) {
+
+  prob <- numeric(ndays)
+
+  for (i in 1:ndays){
+    prob[i] <- pgamma(i, shape = shape, rate = rate) -
+      pgamma(i - 1, shape = shape, rate = rate)
+  }
+
+  result <- prob/sum(prob)
+
+  # Add a leading 0 to indicate no cases
+  if(leading0) result <- c(0, result)
+
+  return(result)
+}

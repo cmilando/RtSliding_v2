@@ -5,7 +5,7 @@
 source("01_simulate_data.R")
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 2
+tau        = 7
 max_ww     = maxt - tau
 M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 
@@ -15,6 +15,12 @@ M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 # used for
 sliding_windows = get_SW(maxt, tau)
 sliding_windows
+
+# sliding_windows_beta <- matrix(data = c(c(2, 2), c(2, 3), c(2, 4)),
+#                                nrow = 3, ncol = 2)
+# sliding_windows_beta <- rbind(sliding_windows_beta, sliding_windows)
+#
+# max_ww <- nrow(sliding_windows_beta)
 
 ## OK NOW< RUN IN 1 D
 stan_data <- list(
@@ -42,5 +48,5 @@ m_hier <- rstan::stan(file = 'sliding_1d.stan',
                       cores = 1,
                       chains = 1)
 
-source("03_plot_output.R")
-
+source("03_extract_output.R")
+source("04_plot.R")
