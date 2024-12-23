@@ -211,10 +211,9 @@ get_analytical_R <- function(incid, sliding_windows, sip,
 
   ## output
   get_posterior <- function(q) {
-    median_posterior <- qgamma(q,
-                               shape = a_posterior,
-                               scale = b_posterior, lower.tail = TRUE, log.p = FALSE
-    )
+    qgamma(q,shape = a_posterior,
+           scale = b_posterior,
+           lower.tail = TRUE, log.p = FALSE)
   }
 
   out_df <- data.frame(
