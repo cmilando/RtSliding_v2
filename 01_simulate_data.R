@@ -19,7 +19,7 @@ set.seed(123)
 #' ============================================================================
 
 # --- Initialize ---
-maxt       = 80
+maxt       = 10
 init_cases = 100
 sip        = c(0, 0.1, 0.2, 0.3, 0.2, 0.1, 0.05, 0.05)
 S          = length(sip)
@@ -32,7 +32,7 @@ stopifnot(sip[1] == 0)
 par(mfrow = c(1, 2))  # Two plots in one row
 
 ##
-R_TRUE_matrix = getSPLINE(20, 1.5, maxt)
+R_TRUE_matrix = getSPLINE(ceiling(maxt/4), 1.5, maxt)
 
 ##
 MTRUE <- get_Mt(R_TRUE_matrix, init_cases, sip)

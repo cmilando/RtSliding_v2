@@ -111,7 +111,6 @@ get_Rt <- function(m, init_cases, w) {
     Rt[t]  = m[t] / inner_vec
 
   }
-  Mout
   return(Rt)
 }
 

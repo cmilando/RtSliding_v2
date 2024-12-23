@@ -2,7 +2,7 @@
 #' PHASE 3
 #' ============================================================================
 out <- rstan::extract(m_hier)
-out_init <- rstan::extract(m_hier_init)
+#out_init <- rstan::extract(m_hier_init)
 
 head(out$M[1, , 1:5])
 tail(out$M[1, , 1:5])
@@ -69,9 +69,9 @@ Rlist_lb <- apply(out$R, 2, quantile, probs = 0.025)[first_w:max_ww]
 Rlist_ub <- apply(out$R, 2, quantile, probs = 0.975)[first_w:max_ww]
 
 ##
-Rlist_init_med <-apply(out_init$R, 2, quantile, probs = 0.5)[first_w:max_ww]
-Rlist_init_lb <- apply(out_init$R, 2, quantile, probs = 0.025)[first_w:max_ww]
-Rlist_init_ub <- apply(out_init$R, 2, quantile, probs = 0.975)[first_w:max_ww]
+# Rlist_init_med <-apply(out_init$R, 2, quantile, probs = 0.5)[first_w:max_ww]
+# Rlist_init_lb <- apply(out_init$R, 2, quantile, probs = 0.025)[first_w:max_ww]
+# Rlist_init_ub <- apply(out_init$R, 2, quantile, probs = 0.975)[first_w:max_ww]
 
 ##
 Ryrange = range(Rlist_med, Rlist_lb, Rlist_ub,
@@ -116,16 +116,10 @@ polygon(c(epiE_x, rev(epiE_x)),
         c(epiE_lb, rev(epiE_ub)),
         col = rgb(0, 1, 0, 0.2), border = NA)
 
-lines(x = Rlist_x, y = Rlist_init_med, type = 'l', col = 'red')
-polygon(c(Rlist_x, rev(Rlist_x)),
-        c(Rlist_init_lb, rev(Rlist_init_ub)),
-        col = rgb(1, 0, 0, 0.2), border = NA)
-
 abline(h = 1, lty = 2)
 
-legend("topright", legend = c("Function", "STAN",
-                              "STAN w Init.", "EpiEstim"),
-       col = c("black", "blue", 'red', "green"),
+legend("topright", legend = c("Function", "STAN","EpiEstim"),
+       col = c("black", "blue", "green"),
        lty = 1, lwd = 2, cex = 0.8)
 
 # Reset graphical parameters to default

@@ -3,7 +3,7 @@
 #' ============================================================================
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 10
+tau        = 2
 max_ww     = maxt - tau
 M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 
@@ -40,23 +40,4 @@ m_hier <- rstan::stan(file = 'sliding_1d.stan',
                       cores = 1,
                       chains = 1)
 
-#' ============================================================================
-stan_data_init <- list(
-  N = maxt,                  # number of days
-  tau = tau,                 #
-  max_ww = max_ww,           #
-  SW = sliding_windows,      #
-  Y = NOBS,                  # cases
-  S = length(sip),           # serial interval length
-  W = sip,                   # serial interval vector
-  init_cases = 75
-)
-
-# if this fails, its mostly in the initialization it seems
-
-m_hier_init <- rstan::stan(file = 'sliding_1d_w_init.stan',
-                      data = stan_data_init,
-                      iter = 2000,
-                      init = initf1,
-                      cores = 1,
-                      chains = 1)
+source("03_plot_output.R")
