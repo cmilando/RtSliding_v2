@@ -8,13 +8,15 @@ use in order:
 * `03_extract_output.R`
 * `04_plot.R`
 
-Essentially this is one step beyond the Cori 2013 method. Except you can't predict the posterior M(t) with Cori 2013.
+Essentially this is one step beyond the Cori 2013 method. But doing it this way means you can get a posterior distribution for M(t)!
+
+### TO-DO
+* re-implement back imputation and negative indexing
 
 ### next steps
 * adding the J dimension back in -- confirm that this works if P is diagonal ones
-* does changing R to be Gamma change the fit?
 * do `Flu2009`
-* also implement back-calcuation
+
 
 ![Alt text](plot.png)
 

@@ -63,19 +63,19 @@ analytical_R <- get_analytical_R(NOBS, sliding_windows, sip)
 dim(out$R)
 
 # match windows
-first_w = -1
-i = 1
-while(first_w < 0) {
-  if(res$R[1, 1] == sliding_windows[i, 1] &
-     res$R[1, 2] == sliding_windows[i, 2]) {
-    first_w = i
-  }
-  i = i + 1
-}
-# first_w = 1
+# first_w = -1
+# i = 1
+# while(first_w < 0) {
+#   if(res$R[1, 1] == sliding_windows[i, 1] &
+#      res$R[1, 2] == sliding_windows[i, 2]) {
+#     first_w = i
+#   }
+#   i = i + 1
+# }
+first_w = 1
 
 Rlist_x = sliding_windows[first_w:max_ww, 2]
-stopifnot(identical(Rlist_x, epiE_x))
+#stopifnot(identical(Rlist_x, epiE_x))
 
 ##
 Rlist_med <-apply(out$R, 2, quantile, probs = 0.5)[first_w:max_ww]

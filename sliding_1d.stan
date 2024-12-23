@@ -104,8 +104,8 @@ model {
   logInitCases ~ normal(0, 1);
 
   // priors and sample
-  xsigma ~ inv_gamma(2, 1);
-  xbeta ~ normal(0, 1);
+  xsigma ~ inv_gamma(2, 1);  // this gets the variance across the region
+  xbeta ~ normal(0, 1);      // this gets the value
 
   // WINDOW SPECIFIC LogR
   for(ww in 1:max_ww) {
@@ -123,8 +123,9 @@ model {
       // ARE DRAWN FROM ALL OF THE WINDOWS THAT THIS DAY FALLS INTO
       // This is also what forces the betas of adjacent windows to be
       // related. and you have to add each target separately so its 1:1
+      // Wow, alarming that that ran without needing mw
       for (n in startN:endN) {
-        target += poisson_lpmf(Y[n] | M[n]);
+        target += poisson_lpmf(Y[n] | M[n, ww]);
       }
 
   }

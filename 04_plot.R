@@ -4,8 +4,8 @@
 
 # Adjust graphics parameters for side-by-side plots
 
-# png("plot.png", units = 'in',
-#     width = 9, height = 7.5, res = 600) # 300 DPI
+png("plot.png", units = 'in',
+    width = 9, height = 7.5, res = 600) # 300 DPI
 ## set graph params
 par(mfrow = c(2, 2))  # Two plots in one row
 
@@ -81,4 +81,4 @@ legend("topright", legend = c("Function", "STAN","EpiEstim",
 # Reset graphical parameters to default
 par(mfrow = c(1, 1))
 #
-# dev.off()
+dev.off()
