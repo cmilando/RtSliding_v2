@@ -125,10 +125,10 @@ get_Rt <- function(m, init_cases, w) {
 #'
 #' @examples
 get_SW <- function(maxt, tau) {
-  max_ww     = maxt - tau
+  max_ww     = maxt - tau + 1
   sliding_windows <- matrix(data = NA, nrow = max_ww, ncol = 2)
   window_i = 1
-  startN = 2
+  startN = 1
   endN = startN + (tau-1)
   sliding_windows[window_i, 1] = startN
   sliding_windows[window_i, 2] = endN
