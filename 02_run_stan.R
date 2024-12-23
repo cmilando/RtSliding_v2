@@ -16,13 +16,20 @@ M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 sliding_windows = get_SW(maxt, tau)
 sliding_windows
 
-# sliding_windows_beta <- matrix(data = c(c(2, 2), c(2, 3), c(2, 4)),
-#                                nrow = 3, ncol = 2)
-# sliding_windows_beta <- rbind(sliding_windows_beta, sliding_windows)
-#
-# max_ww <- nrow(sliding_windows_beta)
+# adding small windows up front
+if(tau > 1) {
+  second_col <- 2:(tau)
 
-## OK NOW< RUN IN 1 D
+  sliding_windows_beta <- matrix(data = c(rep(2, length(second_col)),
+                                          second_col),
+                          nrow = length(second_col),
+                          ncol = 2)
+
+  sliding_windows <- rbind(sliding_windows_beta, sliding_windows)
+  max_ww <- nrow(sliding_windows)
+}
+
+# --- OK NOW< RUN IN 1 D ---
 stan_data <- list(
   N = maxt,                  # number of days
   tau = tau,                 #

@@ -33,8 +33,14 @@ R_TRUE_matrix = getSPLINE(ceiling(maxt/4), 1.5, maxt)
 
 ##
 MTRUE <- get_Mt(R_TRUE_matrix, init_cases, sip)
+
 NOBS <- sapply(MTRUE, function(x) rpois(1, x))
 stopifnot(all((NOBS != 0)))
+
 RT_calc = get_Rt(m = NOBS, init_cases = init_cases, w = sip)
 stopifnot(length(RT_calc) == length(R_TRUE_matrix))
 
+## add the back-calculated cases
+# back_imputed <- backimpute(NOBS, 4)
+# NOBS <- c(back_imputed, NOBS)
+# maxt <- length(NOBS)

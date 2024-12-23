@@ -150,6 +150,26 @@ get_SW <- function(maxt, tau) {
 
 }
 
+#' Get the N to sliding window mapping
+#'
+#' @param sliding_windows
+#' @param maxt
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_SWT <- function(sliding_windows, maxt) {
+  SWT <- vector("list", maxt)
+  for(n in 1:maxt) {
+    for(w in 1:nrow(sliding_windows)) {
+      startN <- sliding_windows[w, 1]
+      endN <- sliding_windows[w, 2]
+      if(n %in% startN:endN) SWT[[n]] <- c(SWT[[n]], w)
+    }
+  }
+  return(SWT)
+}
 
 #' Get analytical R, the guts of EpiEstim
 #'
@@ -252,4 +272,44 @@ si <- function(ndays, shape, rate, leading0 = TRUE) {
   if(leading0) result <- c(0, result)
 
   return(result)
+}
+
+
+#' back-calculation
+#'
+#' @param incid
+#' @param window_b
+#'
+#' @return
+#' @export
+#'
+#' @examples
+backimpute <- function(incid, window_b) {
+
+  # incid could be a data.frame. Better to work with a vector of integers
+  local_incidence <- incid
+
+  # some cases may be 0, implying -infinite logs
+  safe_shift <- .5
+
+  # backimpute unobserved, previous cases based on first window_b of observations
+  log_incid_start <- data.frame(
+    t = seq(window_b),
+    li = log(local_incidence[1:window_b] + safe_shift)
+  )
+  imputed_t <- seq(from = -100, to = 0)
+  fit_backimpute <- lm(li ~ t, data = log_incid_start)
+
+  predict_backimpute_log <- predict.lm(fit_backimpute,
+                                       newdata = list(t = imputed_t))
+
+  predict_backimpute <- exp(predict_backimpute_log) - safe_shift
+  names(predict_backimpute) <- imputed_t
+
+  # exclude negative cases arising from shift before logs.
+  idx_nonnegative <- which(predict_backimpute >= 0)
+  predict_backimpute <- predict_backimpute[idx_nonnegative]
+
+  return(ceiling(predict_backimpute))
+
 }

@@ -3,14 +3,18 @@
 #' ============================================================================
 out <- rstan::extract(m_hier)
 
+dim(out$M)
+head(out$M[1, , ], 15)
+
 # -- OBSERVATIONS
 # ok for each value of M, its a function of those specific winwos
+# don't oversample, just take the last row
 Mlist = vector('list', maxt)
 dim(out$M)
-for(n in (tau+1):maxt) {
-  start_W = max(1,n - tau)
-  end_W = min(n, max_ww)
-  Mlist[[n]] <- out$M[,n, unique(start_W:end_W)]
+SWT <- get_SWT(sliding_windows, maxt)
+for(n in 1:maxt) {
+  these_windows <- SWT[[n]]
+  Mlist[[n]] <- as.vector(out$M[,n, these_windows])
 }
 
 Mlist_x <- 1:maxt

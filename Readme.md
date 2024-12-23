@@ -13,6 +13,8 @@ Essentially this is one step beyond the Cori 2013 method. Except you can't predi
 ### next steps
 * adding the J dimension back in -- confirm that this works if P is diagonal ones
 * does changing R to be Gamma change the fit?
+* do `Flu2009`
+* also implement back-calcuation
 
 ![Alt text](plot.png)
 
