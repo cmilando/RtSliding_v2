@@ -6,6 +6,7 @@ data {
   int<lower=0> Y[N];       // observed cases.
   int<lower=1> S;          // length of serial interval
   vector[S] W;             // serial interval
+  real GuessM;
 }
 
 parameters {
@@ -56,11 +57,18 @@ transformed parameters {
         for(si in 1:S_loop_max) {
           int rev_i = rev_vec[si];
 
-          if(rev_i < 1) {
+          ///////////////////////////////////////
+          // THIS IS WHERE THINGS NEED TO CHANGE
+          if(rev_i < 0) {
             mx = 0;
           }
 
-          if(rev_i >= 1){
+          if(rev_i == 0) {
+            mx = GuessM;
+          }
+          ///////////////////////////////////////
+
+          if(rev_i > 0){
             mx = M[rev_i, ww];
           }
 

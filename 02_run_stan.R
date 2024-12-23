@@ -27,8 +27,11 @@ stan_data <- list(
   SW = sliding_windows,      #
   Y = NOBS,                  # cases
   S = length(sip),           # serial interval length
-  W = sip                   # serial interval vector
+  W = sip,                   # serial interval vector
+  GuessM = 0.
 )
+
+## // if tau = 1 and GuessM = 0, EpiEstim and our estimate line up
 
 initf1 <- function() {
   list(logR = rep(0,times = max_ww))
@@ -44,3 +47,4 @@ m_hier <- rstan::stan(file = 'sliding_1d.stan',
                       chains = 1)
 
 source("03_plot_output.R")
+xw
