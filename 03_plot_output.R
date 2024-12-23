@@ -4,10 +4,6 @@
 out <- rstan::extract(m_hier)
 #out_init <- rstan::extract(m_hier_init)
 
-head(out$M[1, (tau+1):maxt, 1:5])
-tail(out$M[1, , 1:5])
-dim(out$M[1, , ])
-
 # -- OBSERVATIONS
 # ok for each value of M, its a function of those specific winwos
 Mlist = vector('list', maxt)
