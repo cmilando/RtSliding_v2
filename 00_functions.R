@@ -114,44 +114,6 @@ get_Rt <- function(m, init_cases, w) {
   return(Rt)
 }
 
-#' Get initial R(t) based on tau
-#'
-#' @param m
-#' @param w
-#' @param tau
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_first_Rt <- function(m, w, tau) {
-
-  Rt <- 0
-
-  inner_vec = 0
-
-  S_loop_max = min(length(w), t + 1)
-  forward_vec = 1:S_loop_max
-  rev_vec = t + 1 - forward_vec
-
-  for(si in 1:S_loop_max) {
-    rev_i = rev_vec[si]
-
-    if(rev_i < 0) {
-      mx = 0
-    } else if(rev_i == 0) {
-      mx = init_cases
-    } else {
-      mx = m[rev_i]
-    }
-
-    inner_vec = inner_vec + w[si] * mx
-  }
-
-
-
-  return(Rt)
-}
 
 #' Get sliding window matrix based on maxt and tau
 #'

@@ -6,7 +6,6 @@ data {
   int<lower=0> Y[N];       // observed cases.
   int<lower=1> S;          // length of serial interval
   vector[S] W;             // serial interval
-  real GuessM;
 }
 
 parameters {
@@ -14,6 +13,7 @@ parameters {
   real logR[max_ww];
   real xbeta[max_ww];
   real<lower=0> xsigma;
+  real logInitCases;
 }
 
 transformed parameters {
@@ -26,8 +26,10 @@ transformed parameters {
   // get R in exp() space for each window
   for(ww in 1:max_ww) {
     R[ww] = exp(logR[ww]);
-    //
+    ///////////////////////////////////////
+    // THIS IS WHERE THINGS NEED TO CHANGE
     M[1, ww] = Y[1] * 1.0;
+    ///////////////////////////////////////
   }
 
   // ------ CALCULATE M(t) -------------
@@ -57,14 +59,14 @@ transformed parameters {
         for(si in 1:S_loop_max) {
           int rev_i = rev_vec[si];
 
-          ///////////////////////////////////////
-          // THIS IS WHERE THINGS NEED TO CHANGE
           if(rev_i < 0) {
-            mx = 0;
+            mx = 0.;
           }
 
+          ///////////////////////////////////////
+          // THIS IS WHERE THINGS NEED TO CHANGE
           if(rev_i == 0) {
-            mx = GuessM;
+            mx = exp(logInitCases);
           }
           ///////////////////////////////////////
 
@@ -93,6 +95,9 @@ transformed parameters {
 model {
 
   // ------ SIGMA, BETA, and LogR ------
+  //
+  logInitCases ~ normal(0, 1);
+
   // priors and sample
   xsigma ~ inv_gamma(2, 1);
   xbeta ~ normal(0, 1);

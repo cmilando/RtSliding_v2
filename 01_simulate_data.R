@@ -19,7 +19,7 @@ set.seed(123)
 #' ============================================================================
 
 # --- Initialize ---
-maxt       = 20
+maxt       = 40
 init_cases = 100
 sip        = c(0, 0.1, 0.2, 0.3, 0.2, 0.1, 0.05, 0.05)
 S          = length(sip)
@@ -36,13 +36,15 @@ R_TRUE_matrix = getSPLINE(ceiling(maxt/4), 1.5, maxt)
 
 ##
 MTRUE <- get_Mt(R_TRUE_matrix, init_cases, sip)
-plot(MTRUE, type = 'l', ylab = 'Cases', xlab = 'Day', col = 'red', lwd = 1.5,
-     main = paste0('Cases (N=', length(R_TRUE_matrix), ")"))
-
-##
 NOBS <- sapply(MTRUE, function(x) rpois(1, x))
-points(NOBS, cex = 0.8)
 stopifnot(all((NOBS != 0)))
+
+plot(MTRUE, type = 'l', ylab = 'Cases', xlab = 'Day',
+     col = 'red', lwd = 1.5,
+     ylim = range(MTRUE, NOBS),
+     main = paste0('Cases (N=', length(R_TRUE_matrix), ")"))
+points(NOBS, cex = 0.8)
+
 legend("topright", legend = c("Function", "Observed"),
        col = c("red", "black"),
        lty = 1, lwd = 2, cex = 0.8)
@@ -51,6 +53,7 @@ legend("topright", legend = c("Function", "Observed"),
 RT_calc = get_Rt(m = NOBS, init_cases = init_cases, w = sip)
 stopifnot(length(RT_calc) == length(R_TRUE_matrix))
 plot(RT_calc, col = 'black', type = 'l', ylab = 'R(t)', xlab = 'Day',
+     ylim = range(RT_calc, R_TRUE_matrix),
      main = paste0('Rt (N=', length(R_TRUE_matrix), ")"), lty = 3)
 lines(R_TRUE_matrix, type = 'l', col = 'red')
 abline(h = 1, lty = 2)

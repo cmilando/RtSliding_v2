@@ -5,7 +5,7 @@
 source("01_simulate_data.R")
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 1
+tau        = 3
 max_ww     = maxt - tau
 M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 
@@ -27,8 +27,7 @@ stan_data <- list(
   SW = sliding_windows,      #
   Y = NOBS,                  # cases
   S = length(sip),           # serial interval length
-  W = sip,                   # serial interval vector
-  GuessM = 0.
+  W = sip                   # serial interval vector
 )
 
 ## // if tau = 1 and GuessM = 0, EpiEstim and our estimate line up

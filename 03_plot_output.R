@@ -4,7 +4,7 @@
 out <- rstan::extract(m_hier)
 #out_init <- rstan::extract(m_hier_init)
 
-head(out$M[1, , 1:5])
+head(out$M[1, (tau+1):maxt, 1:5])
 tail(out$M[1, , 1:5])
 dim(out$M[1, , ])
 
@@ -12,12 +12,13 @@ dim(out$M[1, , ])
 # ok for each value of M, its a function of those specific winwos
 Mlist = vector('list', maxt)
 dim(out$M)
-for(n in 1:maxt) {
+for(n in (tau+1):maxt) {
   start_W = max(1,n - tau)
   end_W = min(n, max_ww)
   Mlist[[n]] <- out$M[,n, unique(start_W:end_W)]
 }
 
+Mlist_x <- 1:maxt
 Mlist_med <- sapply(Mlist, quantile, probs = 0.5)
 Mlist_lb <- sapply(Mlist, quantile, probs = 0.025)
 Mlist_ub <- sapply(Mlist, quantile, probs = 0.975)
