@@ -2,8 +2,10 @@
 #' PHASE 2
 #' ============================================================================
 
+source("01_simulate_data.R")
+
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 2
+tau        = 1
 max_ww     = maxt - tau
 M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 
