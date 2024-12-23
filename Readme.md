@@ -1,12 +1,19 @@
 # Sliding window
 
-got to work in 1 dimension
+Bayesian sliding window for R(t) work in 1 dimension
 
-use `01_main.R`
+use in order:
+* `01_simulate_data.R`
+* `02_run_stan.R`
+* `03_extract_output.R`
+* `04_plot.R`
+
+Essentially this is one step beyond the Cori 2013 method. Except you can't predict the posterior M(t) with Cori 2013.
 
 ### next steps
-* reimplementing xbeta and xsigma
 * adding the J dimension back in -- confirm that this works if P is diagonal ones
-* change prior on R to gamma to get it to match EpiEstim
+* does changing R to be Gamma change the fit?
+
+![Alt text](plot.png)
 
 
