@@ -29,16 +29,26 @@ stopifnot(length(Mlist_med) == maxt)
 # ok for each value of M, its a function of those specific winwos
 
 # -- EpiEstim
+library(EpiEstim)
 t_start <- seq(2, length(NOBS)-(tau - 1))
 t_end   <- t_start + (tau - 1)
 
-library(EpiEstim)
-res <- estimate_R(incid = NOBS,
-                  method = "non_parametric_si",
-                  config = make_config(list(
-                    si_distr = sip,
-                    t_start = t_start,
-                    t_end = t_end)))
+if(tau > 2) {
+  res <- estimate_R(incid = NOBS,
+                    method = "non_parametric_si",
+                    config = make_config(list(
+                      si_distr = sip,
+                      t_start = t_start,
+                      t_end = t_end)),
+                    backimputation_window = tau + 1)
+} else {
+  res <- estimate_R(incid = NOBS,
+                    method = "non_parametric_si",
+                    config = make_config(list(
+                      si_distr = sip,
+                      t_start = t_start,
+                      t_end = t_end)))
+}
 epiE_x = res$R$t_end
 epiE_med = res$R$`Median(R)`
 epiE_lb = res$R$`Quantile.0.025(R)`
