@@ -47,4 +47,4 @@ m_hier <- rstan::stan(file = 'sliding_1d.stan',
                       chains = 1)
 
 source("03_plot_output.R")
-xw
+
