@@ -41,7 +41,7 @@ transformed parameters {
 
         // Setting up the forward and backwards iterators
         real inner_vec = 0;
-        int  S_loop_max = min(S, t + 1); // This S and t + 1 because ...
+        int  S_loop_max = min(S, t + 1); // This S and t + 1 so you get back to M[1] when t=2
         int  forward_vec[S_loop_max];
         int  rev_vec[S_loop_max];
         for(si in 1:S_loop_max) {
@@ -101,7 +101,7 @@ model {
 
   // priors and sample
   xsigma ~ inv_gamma(2, 1);  // this gets the variance across the region
-  xbeta ~ normal(0, 1);      // this gets the value
+  xbeta ~ normal(0, 1);      // this gets the value for each window
 
   // WINDOW SPECIFIC LogR
   for(ww in 1:max_ww) {

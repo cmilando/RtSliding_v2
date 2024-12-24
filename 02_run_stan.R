@@ -5,7 +5,7 @@
 source("01_simulate_data.R")
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 7
+tau        = 5
 max_ww     = maxt - tau
 M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 
