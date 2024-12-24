@@ -82,3 +82,4 @@ legend("topright", legend = c("Function", "STAN","EpiEstim",
 par(mfrow = c(1, 1))
 #
 # dev.off()
+

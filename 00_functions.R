@@ -186,6 +186,15 @@ get_SWT <- function(sliding_windows, maxt) {
 get_analytical_R <- function(incid, sliding_windows, sip,
                              mean_prior = 5, std_prior = 5) {
 
+  ## ********
+  ## add the back-calculated cases
+  ## the first argument is the first 4
+  stopifnot(length(incid) > 4)
+  back_imputed <- backimpute(incid, 4)
+  incid <- c(back_imputed, incid)
+  # *** ^ doesn't seem like i am doing this correctly
+
+  ###
   t_start <- sliding_windows[, 1]
   t_end <- sliding_windows[, 2]
   si_distr <- sip
@@ -310,6 +319,38 @@ backimpute <- function(incid, window_b) {
   idx_nonnegative <- which(predict_backimpute >= 0)
   predict_backimpute <- predict_backimpute[idx_nonnegative]
 
-  return(ceiling(predict_backimpute))
+  return(predict_backimpute)
 
+}
+
+
+
+#' Make a mac readable filename
+#'
+#' @param mat
+#'
+#' @return
+#' @export
+#'
+#' @examples
+matrix_to_mac_filename <- function(mat) {
+  # Check if the input is a matrix
+  if (!is.matrix(mat)) {
+    stop("Input must be a matrix.")
+  }
+  mat = mat * 10
+  # Convert each numeric value in the matrix to a string
+  # Replace decimal points with underscores to make it file-system friendly
+  string_matrix <- apply(mat, 2, function(col) {
+    sapply(col, function(value) {
+      sprintf("%02i", value)
+    })
+  })
+
+  # Flatten the matrix into a single string with hyphen-separated rows
+  filename <- apply(string_matrix, 1, paste, collapse = "_")
+  filename <- paste(filename, collapse = "-")
+
+  # Return the Mac-readable filename
+  return(filename)
 }
