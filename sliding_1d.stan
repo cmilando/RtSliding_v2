@@ -57,7 +57,7 @@ transformed parameters {
           int rev_i = rev_vec[si];
 
           ///////////////////////////////////////
-          // CASE 1:THIS IS WHERE THINGS NEED TO CHANGE for back imputations
+          // BACK IMPUTATIONS -- just one step for now
           if(rev_i < 0) {
             mx = 0.;
           }

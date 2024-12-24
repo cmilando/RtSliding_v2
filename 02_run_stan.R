@@ -14,7 +14,6 @@ M = matrix(data = NA, nrow = maxt, ncol = max_ww)
 # You can only do this because you know what init_cases is, this is just
 # used for
 sliding_windows = get_SW(maxt, tau)
-sliding_windows
 
 # adding small windows up front
 if(tau > 1) {
