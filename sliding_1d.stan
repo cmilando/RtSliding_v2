@@ -25,10 +25,7 @@ transformed parameters {
   // get R in exp() space for each window
   for(ww in 1:max_ww) {
     R[ww] = exp(logR[ww]);
-    ///////////////////////////////////////
-    // THIS IS WHERE THINGS NEED TO CHANGE for back imputations
     M[1, ww] = Y[1] * 1.0;
-    ///////////////////////////////////////
   }
 
   // ------ CALCULATE M(t) -------------
@@ -59,18 +56,17 @@ transformed parameters {
 
           int rev_i = rev_vec[si];
 
-          // CASE 1:
+          ///////////////////////////////////////
+          // CASE 1:THIS IS WHERE THINGS NEED TO CHANGE for back imputations
           if(rev_i < 0) {
             mx = 0.;
           }
-          ///////////////////////////////////////
-          // CASE 2: THIS IS WHERE THINGS NEED TO CHANGE for back imputations
           if(rev_i == 0) {
             mx = exp(logInitCases);
           }
           ///////////////////////////////////////
 
-          // CASE 3: past M values do exist
+          // CASE 2: past M values do exist
           if(rev_i > 0){
             mx = M[rev_i, ww];
           }
