@@ -343,7 +343,7 @@ matrix_to_mac_filename <- function(mat) {
   # Replace decimal points with underscores to make it file-system friendly
   string_matrix <- apply(mat, 2, function(col) {
     sapply(col, function(value) {
-      sprintf("%02i", value)
+      sprintf("%02s", value)
     })
   })
 
@@ -354,3 +354,5 @@ matrix_to_mac_filename <- function(mat) {
   # Return the Mac-readable filename
   return(filename)
 }
+
+

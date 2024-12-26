@@ -34,19 +34,20 @@ NOBS_mat <- cbind(x1$NOBS, x2$NOBS)
 
 P_base <- matrix(c(c(1.0, 0.0), c(0.0, 1.0)), nrow = 2, byrow = T)
 
-p_mod <- expand.grid(j1 = seq(0, 1, by = 0.1),
-                     j2 = seq(0, 1, by = 0.1))
+p_mod <- expand.grid(j1 = seq(0, 0.9, by = 0.1),
+                     j2 = seq(0, 0.9, by = 0.1))
 
 #####
 
-for(xpi in 1:nrow(p_mod)) {
+for(xpi in 11:nrow(p_mod)) {
   timestamp(suffix = paste(" >", paste(p_mod[xpi,], collapse = '-')))
   P <- P_base
 
   P[1, 1] <- P_base[1, 1] - p_mod[xpi, 1]
   P[1, 2] <- P_base[1, 2] + p_mod[xpi, 1]
-  P[2, 1] <- P_base[2, 1] - p_mod[xpi, 2]
-  P[2, 2] <- P_base[2, 2] + p_mod[xpi, 2]
+
+  P[2, 1] <- P_base[2, 1] + p_mod[xpi, 2]
+  P[2, 2] <- P_base[2, 2] - p_mod[xpi, 2]
 
   stopifnot(all(rowSums(P) == 1))
 

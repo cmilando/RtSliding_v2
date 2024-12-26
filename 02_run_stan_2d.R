@@ -13,19 +13,33 @@ max_ww     = maxt - tau
 # You can only do this because you know what init_cases is, this is just
 # used for
 sliding_windows = get_SW(maxt, tau)
+first_break = mean(sliding_windows[1, ])
+second_break = mean(sliding_windows[max_ww, ])
 
-# adding small windows up front
+# adding small windows up front and the back
 if(tau > 1) {
   second_col <- 2:(tau)
+  first_col <- (maxt-tau+2):maxt
+  stopifnot(length(first_col) == (length(second_col)))
 
-  sliding_windows_beta <- matrix(data = c(rep(2, length(second_col)),
+  sliding_windows_top <- matrix(data = c(rep(2, length(second_col)),
                                           second_col),
                           nrow = length(second_col),
                           ncol = 2)
 
-  sliding_windows <- rbind(sliding_windows_beta, sliding_windows)
+  sliding_windows_bottom <- matrix(data = c(first_col,
+                                         rep(maxt, length(first_col))),
+                                nrow = length(first_col),
+                                ncol = 2)
+
+  sliding_windows <- rbind(sliding_windows_top,
+                           sliding_windows,
+                           sliding_windows_bottom)
+
   max_ww <- nrow(sliding_windows)
 }
+
+sliding_windows
 
 ## ----------
 J = 2
@@ -34,28 +48,36 @@ NOBS_mat <- cbind(x1$NOBS, x2$NOBS)
 
 head(NOBS_mat)
 
-P_base <- matrix(c(c(1.0, 0.0), c(0.0, 1.0)), nrow = 2, byrow = T)
-
-p_mod <- expand.grid(j1 = seq(0, 1, by = 0.1),
-            j2 = seq(0, 1, by = 0.1))
-
-xpi = 2
-
-P <- P_base
-
-P[1, 1] <- P_base[1, 1] - p_mod[xpi, 1]
-P[1, 2] <- P_base[1, 2] + p_mod[xpi, 1]
-P[2, 1] <- P_base[2, 1] - p_mod[xpi, 2]
-P[2, 2] <- P_base[2, 2] + p_mod[xpi, 2]
-
-P <- matrix(c(c(0.8, 0.2), c(0.4, 0.6)), nrow = 2, byrow = T)
-P <- matrix(c(c(0.9, 0.1), c(0.1, 0.9)), nrow = 2, byrow = T)
-P <- matrix(c(c(0.7, 0.3), c(0.1, 0.9)), nrow = 2, byrow = T)
-P <- matrix(c(c(0.7, 0.3), c(0.3, 0.7)), nrow = 2, byrow = T)
-
-matrix_to_mac_filename(P)
+P <- matrix(c(c(1.0, 0.0), c(0.0, 1.0)), nrow = 2, byrow = T)
+P
 
 stopifnot(all(rowSums(P) == 1))
+
+## ---------
+# Include a reporting delay at the tail
+# problems here if this is different from tau
+# or not problems but just changes where the discontinuity is
+# but I believe this works as epxected
+# because things are changing but you have less information
+# this is probably where `nowcasting` comes into play
+NDELAY = 2
+stopifnot(NDELAY<tau)
+report_delay <- c(0.6, 0.3)
+
+# ok now create 100 different y tails and pass that in
+set.seed(123)
+NSIM <- 5
+ar <- array(rep(NaN, NSIM*(NDELAY)*J), c(NSIM, NDELAY, J))
+for(j in 1:J) {
+  observed_Y <- NOBS_mat[(maxt - (NDELAY-1):0), j]
+  expected_Y <- observed_Y / report_delay
+  residual_Y = expected_Y - observed_Y
+  sample_Y <- sapply(residual_Y, function(yy) rpois(NSIM, yy))
+  ar[, , j] = as.integer(observed_Y + sample_Y)
+}
+
+
+# the solution here is to do like EpiNow2 and separate this section out
 
 # --- OK NOW< RUN IN 1 D ---
 stan_data <- list(
@@ -67,7 +89,10 @@ stan_data <- list(
   SW = sliding_windows,      #
   Y = NOBS_mat,              # cases
   S = length(sip),           # serial interval length
-  W = sip                   # serial interval vector
+  W = sip,                   # serial interval vector
+  NDELAY = NDELAY,
+  NSIM = NSIM,
+  Ymod = ar
 )
 
 ## // if tau = 1 and GuessM = 0, EpiEstim and our estimate line up
@@ -78,7 +103,7 @@ initf1 <- function() {
 }
 
 # Run STAN
-m_hier <- rstan::stan(file = 'sliding_2d.stan',
+m_hier <- rstan::stan(file = 'sliding_2d_plus.stan',
                       data = stan_data,
                       iter = 3000,
                       init = initf1,
@@ -89,4 +114,5 @@ m_hier <- rstan::stan(file = 'sliding_2d.stan',
 # but results seem the same
 
 source("03_extract_output_2d.R")
+
 

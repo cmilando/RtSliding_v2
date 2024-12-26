@@ -41,15 +41,18 @@ p1 <- ggplot(Mlist_df) + theme_classic2() +
   geom_ribbon(aes(x = Mlist_x, ymin = Mlist_lb,
                   ymax = Mlist_ub, fill = J, group = J),
               alpha = 0.1) +
-  geom_line(aes(x = Mlist_x, y = Mlist_med, color = J, group = J))
+  geom_line(aes(x = Mlist_x, y = Mlist_med, color = J, group = J)) +
+  geom_vline(xintercept = c(first_break, second_break),
+             color = 'white', linewidth = 1) +
+  geom_vline(xintercept = c(first_break, second_break),
+           color = 'grey', linewidth = 0.5, linetype = 'dotted')
 
 # -- RT
 # ok for each value of M, its a function of those specific winwos
 RlistJ = vector("list", J)
 for(j in 1:J) {
 
-  Rlist_x = sliding_windows[, 2]
-  #stopifnot(identical(Rlist_x, epiE_x))
+  Rlist_x = apply(sliding_windows, 1, mean)
 
   ##
   Rlist_med <-apply(out$R[, ,j], 2, quantile, probs = 0.5)
@@ -58,7 +61,8 @@ for(j in 1:J) {
 
   RlistJ[[j]] = data.frame(
     J = j,
-    Rlist_x, Rlist_med, Rlist_lb, Rlist_ub
+    Rlist_x,
+    Rlist_med, Rlist_lb, Rlist_ub
   )
 
 }
@@ -68,11 +72,16 @@ Rlist_df$J <- factor(Rlist_df$J)
 library(ggpubr)
 library(tidyverse)
 p2 <- ggplot(Rlist_df) + theme_classic2() +
+  coord_cartesian(xlim = range(Mlist_x)) +
   geom_hline(yintercept = 1, linetype = 'dashed') +
   geom_ribbon(aes(x = Rlist_x, ymin = Rlist_lb,
                   ymax = Rlist_ub, fill = J, group = J),
               alpha = 0.1) +
-  geom_line(aes(x = Rlist_x, y = Rlist_med, color = J, group = J))
+  geom_line(aes(x = Rlist_x, y = Rlist_med, color = J, group = J)) +
+  geom_vline(xintercept = c(first_break, second_break),
+             color = 'white', linewidth = 1) +
+  geom_vline(xintercept = c(first_break, second_break),
+             color = 'grey', linewidth = 0.5, linetype = 'dotted')
 
 library(patchwork)
-print(p1 + p2)
+print(p1 + p2 + plot_layout(nrow = 1))
