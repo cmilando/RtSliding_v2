@@ -23,10 +23,11 @@ Rlist_df  <- do.call(rbind, RlistJ)
 Rlist_df$J <- factor(Rlist_df$J)
 library(ggpubr)
 library(tidyverse)
-ggplot(Rlist_df) + theme_classic2() +
+p3 <- ggplot(Rlist_df) + theme_classic2() +
   geom_ribbon(aes(x = Rlist_x, ymin = Rlist_lb,
                   ymax = Rlist_ub, fill = J, group = J),
               alpha = 0.1) +
   geom_point(aes(x = Rlist_x, y = Rlist_med, color = J, group = J)) +
 geom_line(aes(x = Rlist_x, y = Rlist_med, color = J, group = J))
 
+print(p3)

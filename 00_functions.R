@@ -117,10 +117,11 @@ get_Rt <- function(m, init_cases, w) {
 
 #' Get sliding window matrix based on maxt and tau
 #'
-#' @param maxt
-#' @param tau
+#' @param maxt, the maximum number of days
+#' @param tau, integer sliding window size
 #'
-#' @return
+#' @return a matrix of dim maxt - tau x 2, where each
+#' each row gives the starting and ending coordinates
 #' @export
 #'
 #' @examples
@@ -128,7 +129,7 @@ get_SW <- function(maxt, tau) {
   max_ww     = maxt - tau
   sliding_windows <- matrix(data = NA, nrow = max_ww, ncol = 2)
   window_i = 1
-  startN = 2
+  startN = 2 # ** very important to always start on 2
   endN = startN + (tau-1)
   sliding_windows[window_i, 1] = startN
   sliding_windows[window_i, 2] = endN
@@ -355,4 +356,60 @@ matrix_to_mac_filename <- function(mat) {
   return(filename)
 }
 
+plot_from_RData <- function(f) {
 
+  tau        = 5
+  max_ww     = maxt - tau
+
+  # --- set up sliding window ---
+  # STARTN = 2 so you avoid any weird beginning stuff
+  # You can only do this because you know what init_cases is, this is just
+  # used for
+  sliding_windows = get_SW(maxt, tau)
+  first_break = mean(sliding_windows[1, ])
+  second_break = mean(sliding_windows[max_ww, ])
+  J = 2
+
+  load(f)
+  Mlist_df <- xM
+  Rlist_df <- xR
+
+
+  p1 <- ggplot(Mlist_df) + theme_classic2() +
+    facet_rep_wrap(~J,nrow = J) +
+    geom_point(aes(x = Mlist_x, y = NOBS, group = J),
+               shape = 21) +
+    geom_ribbon(aes(x = Mlist_x, ymin = Mlist_lb,
+                    ymax = Mlist_ub, group = J),
+                alpha = 0.1) +
+    geom_line(aes(x = Mlist_x, y = Mlist_med, group = J)) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'white', linewidth = 1) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'grey', linewidth = 0.5, linetype = 'dotted') +
+    theme(strip.background = element_blank(),
+          strip.text = element_blank()) +
+    ggtitle(paste("Cases and M(t) with τ =", tau)) +
+    ylab('# cases') + xlab("Day")
+
+  p2 <- ggplot(Rlist_df) + theme_classic2() +
+    facet_rep_wrap(~J,nrow = J) +
+    coord_cartesian(xlim = range(Mlist_df$Mlist_x),
+                    ylim = c(0, 3)) +
+    geom_hline(yintercept = 1, linetype = 'dashed') +
+    geom_ribbon(aes(x = x, ymin = lb,
+                    ymax = ub, fill = Model, group = Model),
+                alpha = 0.1) +
+    geom_line(aes(x = x, y = med, color = Model, group = Model)) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'white', linewidth = 1) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'grey', linewidth = 0.5, linetype = 'dotted') +
+    theme(strip.background = element_blank(),
+          strip.text = element_blank()) +
+    ggtitle(paste("R(t) with τ =", tau)) + ylab('R(t)') + xlab("Day")
+
+  library(patchwork)
+  print(p1 + p2 + plot_layout(nrow = 1))
+
+}

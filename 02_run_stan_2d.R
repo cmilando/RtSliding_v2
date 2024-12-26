@@ -65,18 +65,23 @@ stopifnot(NDELAY<tau)
 report_delay <- c(0.6, 0.3)
 
 # ok now create 100 different y tails and pass that in
+# might want to change this so it gets more uncertain?
+# changed to nbinom
 set.seed(123)
-NSIM <- 5
+NSIM <- 10
 ar <- array(rep(NaN, NSIM*(NDELAY)*J), c(NSIM, NDELAY, J))
 for(j in 1:J) {
   observed_Y <- NOBS_mat[(maxt - (NDELAY-1):0), j]
   expected_Y <- observed_Y / report_delay
   residual_Y = expected_Y - observed_Y
-  sample_Y <- sapply(residual_Y, function(yy) rpois(NSIM, yy))
+  sample_Y <- sapply(residual_Y, function(yy) {
+    mu = yy
+    size = 1/report_delay
+    rnbinom(NSIM, mu = mu, size = size)
+  })
   ar[, , j] = as.integer(observed_Y + sample_Y)
 }
-
-
+# source("06_checkYmod.R")
 # the solution here is to do like EpiNow2 and separate this section out
 
 # --- OK NOW< RUN IN 1 D ---
@@ -103,7 +108,7 @@ initf1 <- function() {
 }
 
 # Run STAN
-m_hier <- rstan::stan(file = 'sliding_2d_plus.stan',
+m_hier <- rstan::stan(file = 'sliding_2d.stan',
                       data = stan_data,
                       iter = 3000,
                       init = initf1,

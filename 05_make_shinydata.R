@@ -13,19 +13,33 @@ max_ww     = maxt - tau
 # You can only do this because you know what init_cases is, this is just
 # used for
 sliding_windows = get_SW(maxt, tau)
+first_break = mean(sliding_windows[1, ])
+second_break = mean(sliding_windows[max_ww, ])
 
-# adding small windows up front
+# adding small windows up front and the back
 if(tau > 1) {
   second_col <- 2:(tau)
+  first_col <- (maxt-tau+2):maxt
+  stopifnot(length(first_col) == (length(second_col)))
 
-  sliding_windows_beta <- matrix(data = c(rep(2, length(second_col)),
-                                          second_col),
-                                 nrow = length(second_col),
-                                 ncol = 2)
+  sliding_windows_top <- matrix(data = c(rep(2, length(second_col)),
+                                         second_col),
+                                nrow = length(second_col),
+                                ncol = 2)
 
-  sliding_windows <- rbind(sliding_windows_beta, sliding_windows)
+  sliding_windows_bottom <- matrix(data = c(first_col,
+                                            rep(maxt, length(first_col))),
+                                   nrow = length(first_col),
+                                   ncol = 2)
+
+  sliding_windows <- rbind(sliding_windows_top,
+                           sliding_windows,
+                           sliding_windows_bottom)
+
   max_ww <- nrow(sliding_windows)
 }
+
+sliding_windows
 
 ## ----------
 J = 2
@@ -39,7 +53,7 @@ p_mod <- expand.grid(j1 = seq(0, 0.9, by = 0.1),
 
 #####
 
-for(xpi in 11:nrow(p_mod)) {
+for(xpi in 1:nrow(p_mod)) {
   timestamp(suffix = paste(" >", paste(p_mod[xpi,], collapse = '-')))
   P <- P_base
 
@@ -112,11 +126,11 @@ for(xpi in 11:nrow(p_mod)) {
   Mlist_df$J <- factor(Mlist_df$J)
 
   ###
+  library(EpiEstim)
   RlistJ = vector("list", J)
   for(j in 1:J) {
 
-    Rlist_x = sliding_windows[, 2]
-    #stopifnot(identical(Rlist_x, epiE_x))
+    Rlist_x = apply(sliding_windows, 1, mean)
 
     ##
     Rlist_med <-apply(out$R[, ,j], 2, quantile, probs = 0.5)
@@ -124,15 +138,53 @@ for(xpi in 11:nrow(p_mod)) {
     Rlist_ub <- apply(out$R[, ,j], 2, quantile, probs = 0.975)
 
     RlistJ[[j]] = data.frame(
+      Model = 'STAN',
       J = j,
-      Rlist_x, Rlist_med, Rlist_lb, Rlist_ub
+      x = Rlist_x,
+      med = Rlist_med, lb = Rlist_lb, ub = Rlist_ub
     )
+
+    #
+    NOBS <- NOBS_mat[, j]
+    t_start <- seq(2, length(NOBS)-(tau - 1))
+    t_end   <- t_start + (tau - 1)
+
+    if(tau > 1) {
+      res <- estimate_R(incid = NOBS,
+                        method = "non_parametric_si",
+                        config = make_config(list(
+                          si_distr = sip,
+                          t_start = t_start,
+                          t_end = t_end)),
+                        backimputation_window = S * 2)
+    } else {
+      res <- estimate_R(incid = NOBS,
+                        method = "non_parametric_si",
+                        config = make_config(list(
+                          si_distr = sip,
+                          t_start = t_start,
+                          t_end = t_end)))
+    }
+    # made it a mid window so its apples-apples
+    epiE_x = (res$R$t_end -  res$R$t_start)/2 + res$R$t_start
+    epiE_med = res$R$`Median(R)`
+    epiE_lb = res$R$`Quantile.0.025(R)`
+    epiE_ub = res$R$`Quantile.0.975(R)`
+    EpiDf <- data.frame(
+      Model = 'EpiEstim',
+      J = j,
+      x = epiE_x,
+      med = epiE_med, lb = epiE_lb, ub = epiE_ub
+    )
+
+    RlistJ[[j]] <- rbind(RlistJ[[j]], EpiDf)
 
   }
 
   Rlist_df  <- do.call(rbind, RlistJ)
   Rlist_df$J <- factor(Rlist_df$J)
 
+  ##
   xM = Mlist_df
   xR = Rlist_df
   save(xM, xR, P, file =f)

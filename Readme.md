@@ -18,7 +18,7 @@ Right now the way this is fixed is just imputing what the M[0] value was. I trie
 * is R calculated before or after transfer? changes interpretation
 * runs quickly
 * sigma actually is a function of data now!
-* the warmup sliding windows
+* the warmup / cooldown sliding windows
 * also added extra "vintage" uncertainty at the tail
 
 ### next steps

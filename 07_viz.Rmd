@@ -1,0 +1,60 @@
+---
+title: "07_viz"
+author: "Chad Milando"
+date: "2024-12-26"
+output: html_document
+runtime: shiny
+---
+
+```{=html}
+<style type="text/css">
+.main-container {
+  max-width: 750px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+```
+
+```{css, echo=FALSE}
+.plotlysize {
+  height: 220px;
+```
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(plotly)
+library(purrr)
+library(shiny)
+library(splines)
+library(tidyverse)
+library(ggpubr)
+library(lemon)
+library(patchwork)
+options(shiny.plot.res=96)
+source("00_functions.R")
+```
+
+Viewing the impact of changing the P matrix. 
+
+```{r plot1, echo=FALSE}
+inputPanel(
+  sliderInput("p12", label = "Transfer from zone 1 -> zone 2",
+              min = 0., max = .9, value = 0, step = 0.1),
+  sliderInput("p21", label = "Transfer from zone 2 -> zone 1",
+            min = 0., max = .9, value = 0, step = 0.1)
+)
+
+renderPlot({
+ 
+  xa = (1 - input$p12)*10
+  xb = (0 + input$p12)*10
+  xc = (0 + input$p21)*10
+  xd = (1 - input$p21)*10
+  f_name <- sprintf('shinydata/x%02i_%02i-%02i_%02i.RData',
+                   xa, xb, xc, xd)
+  print(f_name)
+  plot_from_RData(f_name)
+})
+```
+
