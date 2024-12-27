@@ -2,11 +2,8 @@
 
 Bayesian sliding window for R(t) work in 1 dimension
 
-use in order:
-* `01_simulate_data.R`
-* `02_run_stan.R`
-* `03_extract_output.R`
-* `04_plot.R`
+Latest run file:
+* `02_run_stan_2d.R`
 
 Doing it this way means you can get a posterior distribution for M(t)!
 
@@ -23,6 +20,7 @@ Doing it this way means you can get a posterior distribution for M(t)!
 
 ### next steps
 * re-create Zhenwei paper figure 1
+  * seems like this runs in about 1 day
 * incorporate a reporting delay distribution
 * make it software? Excel Julia AWS?
 * [Convert stan to Julia](https://discourse.julialang.org/t/implementation-of-nuts-translating-stan-model-to-julia-juliaconnector/74143)
