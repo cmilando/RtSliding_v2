@@ -21,7 +21,7 @@ runtime: shiny
   height: 220px;
 ```
 
-```{r setup, include=FALSE, echo=FALSE}
+```{r setup, echo=F}
 knitr::opts_chunk$set(echo = TRUE)
 library(plotly)
 library(purrr)
@@ -32,18 +32,75 @@ library(ggpubr)
 library(lemon)
 library(patchwork)
 options(shiny.plot.res=96)
-source("00_functions.R")
 ```
 
 Viewing the impact of changing the P matrix. 
 
-```{r plot1, echo=FALSE}
+```{r plot1, echo=F}
 inputPanel(
   sliderInput("p12", label = "Transfer from zone 1 -> zone 2",
               min = 0., max = .9, value = 0, step = 0.1),
   sliderInput("p21", label = "Transfer from zone 2 -> zone 1",
             min = 0., max = .9, value = 0, step = 0.1)
 )
+
+plot_from_RData <- function(f) {
+  source("01_simulate_data_2d.R")
+  tau        = 5
+  max_ww     = maxt - tau
+
+  # --- set up sliding window ---
+  # STARTN = 2 so you avoid any weird beginning stuff
+  # You can only do this because you know what init_cases is, this is just
+  # used for
+  sliding_windows = get_SW(maxt, tau)
+  first_break = mean(sliding_windows[1, ])
+  second_break = mean(sliding_windows[max_ww, ])
+  J = 2
+
+  load(f)
+  Mlist_df <- xM
+  Rlist_df <- xR
+
+
+  p1 <- ggplot(Mlist_df) + theme_classic2() +
+    facet_rep_wrap(~J,nrow = J) +
+    geom_point(aes(x = Mlist_x, y = NOBS, group = J),
+               shape = 21) +
+    geom_ribbon(aes(x = Mlist_x, ymin = Mlist_lb,
+                    ymax = Mlist_ub, group = J),
+                alpha = 0.1) +
+    geom_line(aes(x = Mlist_x, y = Mlist_med, group = J)) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'white', linewidth = 1) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'grey', linewidth = 0.5, linetype = 'dotted') +
+    theme(strip.background = element_blank(),
+          strip.text = element_blank()) +
+    ggtitle(paste("Cases and M(t) with τ =", tau)) +
+    ylab('# cases') + xlab("Day")
+
+  p2 <- ggplot(Rlist_df) + theme_classic2() +
+    facet_rep_wrap(~J,nrow = J) +
+    coord_cartesian(xlim = range(Mlist_df$Mlist_x),
+                    ylim = c(0, 3)) +
+    geom_hline(yintercept = 1, linetype = 'dashed') +
+    geom_ribbon(aes(x = x, ymin = lb,
+                    ymax = ub, fill = Model, group = Model),
+                alpha = 0.1) +
+    geom_line(aes(x = x, y = med, color = Model, group = Model)) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'white', linewidth = 1) +
+    geom_vline(xintercept = c(first_break, second_break),
+               color = 'grey', linewidth = 0.5, linetype = 'dotted') +
+    theme(strip.background = element_blank(),
+          strip.text = element_blank()) +
+    ggtitle(paste("R(t) with τ =", tau)) + ylab('R(t)') + xlab("Day")
+
+  library(patchwork)
+  print(p1 + p2 + plot_layout(nrow = 1))
+
+}
 
 renderPlot({
  
