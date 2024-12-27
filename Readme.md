@@ -25,6 +25,9 @@ Doing it this way means you can get a posterior distribution for M(t)!
 * re-create Zhenwei paper figure 1
 * incorporate a reporting delay distribution
 * make it software? Excel Julia AWS?
+* [Convert stan to Julia](https://discourse.julialang.org/t/implementation-of-nuts-translating-stan-model-to-julia-juliaconnector/74143)
+* Oo what about an API? 
+* this would also make it easy to test
 * write a different paper talking about this method?
 * use this to solve one of KGs issues related to downscaling?
 
