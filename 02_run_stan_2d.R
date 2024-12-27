@@ -68,20 +68,22 @@ report_delay <- c(0.6, 0.3)
 # might want to change this so it gets more uncertain?
 # changed to nbinom
 set.seed(123)
-NSIM <- 10
+NSIM <- 50
 ar <- array(rep(NaN, NSIM*(NDELAY)*J), c(NSIM, NDELAY, J))
 for(j in 1:J) {
   observed_Y <- NOBS_mat[(maxt - (NDELAY-1):0), j]
   expected_Y <- observed_Y / report_delay
   residual_Y = expected_Y - observed_Y
-  sample_Y <- sapply(residual_Y, function(yy) {
-    mu = yy
-    size = 1/report_delay
-    rnbinom(NSIM, mu = mu, size = size)
+  sample_Y <- sapply(1:length(residual_Y), function(i) {
+    xmu = residual_Y[i]
+    xsize = 1/(1 - report_delay)
+    xsd = xmu/report_delay[i]
+    rnbinom(NSIM, mu = xmu, size = xsize)
+    #rnorm(NSIM, mean = xmu, sd = xsd)
   })
   ar[, , j] = as.integer(observed_Y + sample_Y)
 }
-# source("06_checkYmod.R")
+source("06_checkYmod.R")
 # the solution here is to do like EpiNow2 and separate this section out
 
 # --- OK NOW< RUN IN 1 D ---

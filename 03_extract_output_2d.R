@@ -73,6 +73,11 @@ for(j in 1:J) {
     med = Rlist_med, lb = Rlist_lb, ub = Rlist_ub
   )
 
+  if(tau == 1) {
+    RlistJ[[j]] <- RlistJ[[j]][2:nrow(RlistJ[[j]]), ]
+    warning('first window omitted since tau == 1')
+  }
+
   #
   NOBS <- NOBS_mat[, j]
   t_start <- seq(2, length(NOBS)-(tau - 1))
@@ -119,7 +124,7 @@ p2 <- ggplot(Rlist_df) + theme_classic2() +
   geom_hline(yintercept = 1, linetype = 'dashed') +
   geom_ribbon(aes(x = x, ymin = lb,
                   ymax = ub, fill = Model, group = Model),
-              alpha = 0.1) +
+              alpha = 0.2) +
   geom_line(aes(x = x, y = med, color = Model, group = Model)) +
   geom_vline(xintercept = c(first_break, second_break),
              color = 'white', linewidth = 1) +
@@ -131,3 +136,5 @@ p2 <- ggplot(Rlist_df) + theme_classic2() +
 
 library(patchwork)
 print(p1 + p2 + plot_layout(nrow = 1))
+ggsave('plot.png', units = 'in',
+            width = 9, height = 6)
