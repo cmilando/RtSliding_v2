@@ -43,7 +43,7 @@ all(rowSums(P) == 1)
 #' ============================================================================
 #' Sliding Windows
 #' ============================================================================
-tau        = 5
+tau        = 40
 max_ww     = maxt - tau
 
 sliding_windows = get_SW(maxt, tau)
@@ -102,5 +102,5 @@ m_hier <- rstan::stan(file = 'sliding_2d.stan',
                       data = stan_data,
                       iter = 3000,
                       init = initf1,
-                      cores = 1,
+                      cores = 4,
                       chains = 1)
