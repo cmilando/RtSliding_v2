@@ -102,6 +102,15 @@ plot_from_RData <- function(f) {
 
 }
 
+renderTable({
+  xa = (1 - input$p12)*1
+  xb = (0 + input$p12)*1
+  xc = (0 + input$p21)*1
+  xd = (1 - input$p21)*1
+  pmat = matrix(c(xa,xb,xc,xd), byrow = T, ncol = 2)
+  print(pmat)
+},colnames = F)
+
 renderPlot({
  
   xa = (1 - input$p12)*10

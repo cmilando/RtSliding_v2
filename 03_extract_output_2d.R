@@ -126,6 +126,8 @@ p2 <- ggplot(Rlist_df) + theme_classic2() +
                   ymax = ub, fill = Model, group = Model),
               alpha = 0.2) +
   geom_line(aes(x = x, y = med, color = Model, group = Model)) +
+  geom_point(aes(x = x, y = med, color = Model, group = Model),
+             shape = 21, size = 1) +
   geom_vline(xintercept = c(first_break, second_break),
              color = 'white', linewidth = 1) +
   geom_vline(xintercept = c(first_break, second_break),

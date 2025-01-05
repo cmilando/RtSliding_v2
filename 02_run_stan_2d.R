@@ -5,7 +5,7 @@
 source("01_simulate_data_2d.R")
 
 # **** CHANGE THIS TO SEE THE IMPACT ***** #
-tau        = 5
+tau        = 15
 max_ww     = maxt - tau
 
 # --- set up sliding window ---
